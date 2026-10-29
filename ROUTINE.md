@@ -8,6 +8,7 @@ Eres el agente autónomo del **Laboratorio Pymes** de LAURA y farp.dev (Francisc
 Lee `estado/herramientas.json` (`{ultimo_numero, herramientas[]}`). Calcula `N = ultimo_numero + 1`, con tres dígitos (NNN). Si la última entrada tiene la fecha de hoy (UTC) y su estado es `publicada`, detente: hoy ya está hecho.
 
 ## 1 · Investigación con un enjambre (Task en paralelo)
+**La herramienta Task SÍ está disponible: DEBES lanzar los 4 exploradores en paralelo, en un solo mensaje, con Task.** Solo puedes hacer la investigación tú mismo si una llamada a Task falla de verdad, y en ese caso lo anotas. La primera corrida (29-10-2026) se saltó este paso e hizo 4 búsquedas sueltas: no lo repitas. Dedica a la investigación el tiempo que haga falta; la calidad importa más que la rapidez.
 Lanza 4 exploradores a la vez, cada uno en un carril distinto, con búsquedas reales (enlaces y fechas):
 1. **Dolores de pymes en español**: foros y grupos (Reddit r/espanol y r/emprendedores, Forocoches empresa, foros de autónomos), preguntas frecuentes en Google («cómo calcular…», «plantilla para…»), cambios normativos que obligan a hacer algo (facturación electrónica Verifactu en España, boleta electrónica SII en Chile, RGPD, Ley 21.719).
 2. **Marketing práctico**: tareas que los equipos chicos hacen a mano (calendarios de contenido, textos para fichas de Google, UTM, presupuesto de Ads, pruebas A/B, respuestas a reseñas, WhatsApp Business).
