@@ -12,6 +12,7 @@ Las construye un agente de IA que dirige [Francisco Reyes](https://farp.dev), de
 
 | N | Fecha | Herramienta | Categoría | Demo |
 |---|---|---|---|---|
+| 001 | 2026-10-29 | [Precio Justo](herramientas/001-precio-justo/) | Gestión y finanzas | [Usar](https://freyesperales.github.io/laboratorio-pymes/herramientas/001-precio-justo/) |
 
 ---
 Licencia MIT.

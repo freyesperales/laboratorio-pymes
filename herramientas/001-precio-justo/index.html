@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Precio Justo · calcula a cuánto vender sin perder en comisiones ni IVA</title>
+<meta name="description" content="Calculadora gratuita: pon tu costo y el margen que quieres, y te dice el precio que debes publicar después de IVA, comisiones y descuentos. Sin registro.">
+<style>
+:root{--tinta:#14161a;--suave:#4b5260;--fondo:#fafaf7;--tarjeta:#fff;--borde:#dcd9d0;--acento:#b83a16;--ok:#1b6b3a;--mal:#a3201c}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--tinta);background:var(--fondo);line-height:1.5}
+.cont{max-width:960px;margin:0 auto;padding:0 16px}
+header{padding:32px 0 8px}
+h1{margin:0 0 6px;font-size:clamp(1.7rem,5vw,2.4rem);letter-spacing:-.02em}
+header p{margin:0;color:var(--suave);max-width:640px}
+.priv{display:inline-block;margin-top:12px;font-size:.85rem;background:#fff;border:1px solid var(--borde);border-radius:999px;padding:5px 12px}
+.rejilla{display:grid;gap:16px;grid-template-columns:1fr;margin-top:20px}
+@media(min-width:800px){.rejilla{grid-template-columns:1.1fr .9fr}}
+.caja{background:var(--tarjeta);border:1px solid var(--borde);border-radius:14px;padding:18px}
+.caja h2{margin:0 0 12px;font-size:1.05rem}
+.campos{display:grid;gap:12px;grid-template-columns:1fr 1fr}
+.campos .ancho{grid-column:1/-1}
+label{display:block;font-size:.88rem;font-weight:600;margin-bottom:3px}
+.ayuda{font-weight:400;color:var(--suave);font-size:.8rem;display:block}
+input,select{width:100%;font:inherit;padding:10px;border:1px solid #8b8f98;border-radius:8px;background:#fff;color:var(--tinta);min-height:44px}
+:focus-visible{outline:3px solid #1d4ed8;outline-offset:2px}
+.modo{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.modo button{flex:1;min-width:140px}
+button{font:inherit;cursor:pointer;border-radius:8px;border:1px solid var(--tinta);background:#fff;color:var(--tinta);padding:10px 14px;min-height:44px;font-weight:600}
+button.sel,button.prim{background:var(--tinta);color:#fff}
+.acciones{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.grande{font-size:clamp(2rem,8vw,2.8rem);font-weight:800;letter-spacing:-.02em;margin:0}
+.etq{color:var(--suave);font-size:.85rem;margin:0}
+.desglose{width:100%;border-collapse:collapse;margin-top:12px;font-size:.93rem}
+.desglose td{padding:6px 0;border-bottom:1px solid var(--borde)}
+.desglose td:last-child{text-align:right;font-variant-numeric:tabular-nums}
+.pos{color:var(--ok)}.neg{color:var(--mal)}
+.err{background:#fdecea;border:1px solid #e3a09b;color:#7a1511;padding:10px 12px;border-radius:8px;margin-top:12px}
+.nota{font-size:.85rem;color:var(--suave);margin-top:10px}
+table.lista{width:100%;border-collapse:collapse;font-size:.88rem}
+table.lista th,table.lista td{padding:6px 8px;border-bottom:1px solid var(--borde);text-align:right}
+table.lista th:first-child,table.lista td:first-child{text-align:left}
+.scroll{overflow-x:auto}
+details{margin-top:16px}
+summary{cursor:pointer;font-weight:600}
+footer{margin:32px 0 0;padding:20px 0 40px;border-top:1px solid var(--borde);font-size:.88rem;color:var(--suave)}
+footer a{color:var(--tinta)}
+.sr{position:absolute;left:-9999px}
+</style>
+</head>
+<body>
+<div class="cont">
+<header>
+  <h1>Precio Justo</h1>
+  <p>Dinos cuánto te cuesta y cuánto quieres ganar. Te decimos a qué precio publicar para que el IVA, las comisiones y los descuentos no se coman tu ganancia.</p>
+  <span class="priv">🔒 Tus datos no salen de tu navegador</span>
+</header>
+
+<div class="rejilla">
+<section class="caja" aria-labelledby="t-datos">
+  <h2 id="t-datos">Tus números</h2>
+  <div class="modo" role="group" aria-label="¿Qué quieres calcular?">
+    <button type="button" id="m1" class="sel" aria-pressed="true">Quiero saber el precio</button>
+    <button type="button" id="m2" aria-pressed="false">Ya tengo un precio</button>
+  </div>
+  <form id="f" class="campos" novalidate>
+    <div><label for="nombre">Producto o servicio</label><input id="nombre" type="text" placeholder="Ej.: Vela de soja 200 g" autocomplete="off"></div>
+    <div><label for="moneda">Moneda (símbolo)</label><input id="moneda" type="text" value="$" maxlength="4" autocomplete="off"></div>
+    <div class="ancho"><label for="costo">Costo por unidad, sin IVA<span class="ayuda">Materiales, producto, mano de obra directa, embalaje.</span></label><input id="costo" inputmode="decimal" placeholder="0,00"></div>
+    <div id="bloqueMargen"><label for="margen">Margen que quieres (%)<span class="ayuda">Ganancia sobre el precio sin IVA.</span></label><input id="margen" inputmode="decimal" value="40"></div>
+    <div id="bloquePrecio" hidden><label for="precio">Precio de venta con IVA<span class="ayuda">Lo que paga el cliente antes de descuentos.</span></label><input id="precio" inputmode="decimal"></div>
+    <div><label for="pais">IVA<span class="ayuda">Elige un país o escribe el tuyo.</span></label>
+      <select id="pais">
+        <option value="21">España 21 %</option><option value="19">Chile 19 %</option><option value="16">México 16 %</option>
+        <option value="19">Colombia 19 %</option><option value="18">Perú 18 %</option><option value="21">Argentina 21 %</option>
+        <option value="22">Uruguay 22 %</option><option value="15">Ecuador 15 %</option><option value="0">Sin IVA</option><option value="otro">Otro…</option>
+      </select></div>
+    <div id="bloqueIva" hidden><label for="iva">IVA (%)</label><input id="iva" inputmode="decimal" value="21"></div>
+    <div><label for="comision">Comisión de plataforma o pasarela (%)<span class="ayuda">Marketplace, tarjeta, tienda online.</span></label><input id="comision" inputmode="decimal" value="0"></div>
+    <div><label for="comisionFija">Comisión fija por venta<span class="ayuda">Ej.: 0,30 por transacción.</span></label><input id="comisionFija" inputmode="decimal" value="0"></div>
+    <div><label for="envio">Envío o gasto que absorbes<span class="ayuda">Por unidad vendida.</span></label><input id="envio" inputmode="decimal" value="0"></div>
+    <div><label for="descuento">Descuento que vas a ofrecer (%)<span class="ayuda">Oferta, cupón, Black Friday.</span></label><input id="descuento" inputmode="decimal" value="0"></div>
+    <div><label for="otros">Otros porcentajes sobre ventas (%)<span class="ayuda">Impuesto a la renta o cuota que prorrateas.</span></label><input id="otros" inputmode="decimal" value="0"></div>
+    <div><label for="redondeo">Terminar el precio en</label>
+      <select id="redondeo"><option value="ninguno">Tal cual</option><option value="entero">Número entero</option><option value="90">,90</option><option value="99">,99</option></select></div>
+  </form>
+  <div class="acciones">
+    <button type="button" id="ejemplo">Probar con un ejemplo</button>
+    <button type="button" id="limpiar">Limpiar</button>
+  </div>
+  <div id="error" class="err" role="alert" hidden></div>
+</section>
+
+<section class="caja" aria-labelledby="t-res" aria-live="polite">
+  <h2 id="t-res">Resultado</h2>
+  <div id="vacio" class="nota">Escribe tu costo o pulsa «Probar con un ejemplo».</div>
+  <div id="res" hidden>
+    <p class="etq" id="etqPrecio">Publica este precio (IVA incluido)</p>
+    <p class="grande" id="pPrecio"></p>
+    <p class="etq" id="pCobrado"></p>
+    <table class="desglose" aria-label="Desglose por unidad vendida"><tbody id="desglose"></tbody></table>
+    <p class="nota" id="pAviso"></p>
+    <div class="acciones">
+      <button type="button" class="prim" id="agregar">Agregar a mi lista</button>
+      <button type="button" id="copiar">Copiar resumen</button>
+    </div>
+  </div>
+</section>
+</div>
+
+<section class="caja" style="margin-top:16px" aria-labelledby="t-lista">
+  <h2 id="t-lista">Mi lista de precios</h2>
+  <p class="nota" style="margin-top:0">Se guarda solo en este navegador. Descárgala en CSV para abrirla en Excel o Google Sheets.</p>
+  <div id="listaVacia" class="nota">Aún no agregaste productos.</div>
+  <div class="scroll"><table class="lista" id="tabla" hidden>
+    <thead><tr><th>Producto</th><th>Costo</th><th>Precio</th><th>Ganancia</th><th>Margen</th><th><span class="sr">Quitar</span></th></tr></thead>
+    <tbody id="filas"></tbody></table></div>
+  <div class="acciones"><button type="button" id="csv" disabled>Descargar CSV</button><button type="button" id="vaciar" disabled>Vaciar lista</button></div>
+</section>
+
+<details>
+  <summary>¿Cómo se calcula?</summary>
+  <p class="nota">El cliente paga el precio con IVA menos el descuento. Al restar el IVA queda el ingreso neto. De ese neto salen el costo, el envío, la comisión (porcentual sobre lo que paga el cliente más la fija) y otros porcentajes. Lo que queda es tu ganancia, y el margen es ganancia ÷ ingreso neto. Los tipos de IVA son orientativos: verifica el que corresponde a tu producto. Esto no sustituye a tu contador.</p>
+</details>
+
+<footer>
+  Herramienta gratuita del Laboratorio Pymes de <a href="https://laura.lat">LAURA</a> · <a href="https://laura.lat">laura.lat</a> · <a href="https://farp.dev">farp.dev</a><br>
+  Tus datos no salen de tu navegador. ¿Quieres algo a medida para tu negocio? <a href="https://wa.me/56999968482">Escríbenos por WhatsApp</a>.
+</footer>
+</div>
+
+<script>
+// Lógica de Precio Justo. Sin dependencias: sirve en el navegador y en Node.
+(function (raiz) {
+  'use strict';
+
+  function num(v) {
+    var n = typeof v === 'number' ? v : parseFloat(String(v).replace(',', '.'));
+    return isFinite(n) ? n : 0;
+  }
+
+  // Modelo: el cliente paga precio_lista * (1 - descuento), IVA incluido.
+  // neto = cobrado / (1 + iva). La comisión porcentual se cobra sobre lo que paga el cliente (con IVA).
+  // ganancia = neto - costo - envio - comision% * cobrado - comision_fija - otros% * neto
+  // margen = ganancia / neto
+
+  function precioParaMargen(o) {
+    var iva = num(o.iva) / 100, m = num(o.margen) / 100, c = num(o.comision) / 100;
+    var otros = num(o.otros) / 100, d = num(o.descuento) / 100;
+    var fijos = num(o.costo) + num(o.envio) + num(o.comisionFija);
+    if (num(o.costo) < 0 || fijos < 0) throw new Error('Los costos no pueden ser negativos.');
+    if (d < 0 || d >= 1) throw new Error('El descuento debe estar entre 0 % y 99 %.');
+    var den = 1 - m - otros - c * (1 + iva);
+    if (den <= 0) throw new Error('Con ese margen, esas comisiones y esos impuestos no hay precio que alcance: lo que se lleva cada venta supera el 100 %. Baja el margen o revisa las comisiones.');
+    var neto = fijos / den;
+    var cobrado = neto * (1 + iva);
+    var lista = cobrado / (1 - d);
+    return detalle(o, lista);
+  }
+
+  function detalle(o, lista) {
+    var iva = num(o.iva) / 100, c = num(o.comision) / 100, otros = num(o.otros) / 100, d = num(o.descuento) / 100;
+    var cobrado = lista * (1 - d);
+    var neto = cobrado / (1 + iva);
+    var comision = c * cobrado + num(o.comisionFija);
+    var impOtros = otros * neto;
+    var ganancia = neto - num(o.costo) - num(o.envio) - comision - impOtros;
+    return {
+      precioLista: lista,
+      precioCobrado: cobrado,
+      neto: neto,
+      iva: cobrado - neto,
+      comision: comision,
+      otros: impOtros,
+      costo: num(o.costo),
+      envio: num(o.envio),
+      ganancia: ganancia,
+      margen: neto > 0 ? ganancia / neto * 100 : 0,
+      recargo: num(o.costo) > 0 ? ganancia / num(o.costo) * 100 : 0
+    };
+  }
+
+  function margenDesdePrecio(o) {
+    var p = num(o.precio);
+    if (p <= 0) throw new Error('Escribe un precio mayor que cero.');
+    return detalle(o, p);
+  }
+
+  // modo: 'ninguno' | 'entero' | '90' (termina en ,90) | '99' (termina en ,99)
+  function redondear(p, modo) {
+    if (modo === 'entero') return Math.ceil(p - 1e-9);
+    if (modo === '90') { var b = Math.ceil(p - 0.9 - 1e-9); return b + 0.9; }
+    if (modo === '99') { var b2 = Math.ceil(p - 0.99 - 1e-9); return b2 + 0.99; }
+    return Math.round(p * 100) / 100;
+  }
+
+  var api = { precioParaMargen: precioParaMargen, margenDesdePrecio: margenDesdePrecio, redondear: redondear, detalle: detalle, num: num };
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+  else raiz.PrecioJusto = api;
+})(typeof window !== 'undefined' ? window : this);
+
+</script>
+<script>
+(function(){
+  var $=function(i){return document.getElementById(i)};
+  var L=window.PrecioJusto, modo=1, ult=null, CLAVE='precio-justo-lista-v1';
+  var lista=[];
+  try{lista=JSON.parse(localStorage.getItem(CLAVE)||'[]')}catch(e){lista=[]}
+  function sim(){return ($('moneda').value||'$').trim()}
+  function fmt(n){return sim()+' '+n.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})}
+  function pct(n){return n.toLocaleString('es-ES',{maximumFractionDigits:1})+' %'}
+  function ivaVal(){return $('pais').value==='otro'?$('iva').value:$('pais').value}
+  function datos(){return{costo:$('costo').value,margen:$('margen').value,iva:ivaVal(),comision:$('comision').value,comisionFija:$('comisionFija').value,envio:$('envio').value,descuento:$('descuento').value,otros:$('otros').value,precio:$('precio').value}}
+  function validar(d){
+    var campos={costo:'el costo',margen:'el margen',comision:'la comisión',comisionFija:'la comisión fija',envio:'el envío',descuento:'el descuento',otros:'otros porcentajes'};
+    if(String($('costo').value).trim()==='')return null;
+    for(var k in campos){var v=String(d[k]).trim();if(v!==''&&!/^-?\d+([.,]\d+)?$/.test(v))throw new Error('Revisa '+campos[k]+': escribe solo números (por ejemplo 12,5).');}
+    if(L.num(d.iva)<0||L.num(d.iva)>100)throw new Error('El IVA debe estar entre 0 y 100.');
+    return d;
+  }
+  function fila(t,v,cls){return '<tr><td>'+t+'</td><td class="'+(cls||'')+'">'+v+'</td></tr>'}
+  function calcular(){
+    var err=$('error');err.hidden=true;
+    try{
+      var d=validar(datos());
+      if(!d){$('res').hidden=true;$('vacio').hidden=false;ult=null;return}
+      var r;
+      if(modo===1){
+        r=L.precioParaMargen(d);
+        var p=L.redondear(r.precioLista,$('redondeo').value);
+        r=L.margenDesdePrecio(Object.assign({},d,{precio:p}));
+        $('etqPrecio').textContent='Publica este precio (IVA incluido)';
+        $('pAviso').textContent=p>L.precioParaMargen(d).precioLista+0.005?'Al redondear hacia arriba, el margen real es '+pct(r.margen)+' (pediste '+pct(L.num(d.margen))+').':'';
+      }else{
+        if(String(d.precio).trim()==='')throw new Error('Escribe el precio de venta con IVA.');
+        r=L.margenDesdePrecio(d);
+        $('etqPrecio').textContent='Con ese precio, tu margen real es';
+        $('pAviso').textContent=r.ganancia<0?'Con este precio pierdes dinero en cada venta.':'';
+      }
+      ult={nombre:$('nombre').value.trim()||'Producto',r:r};
+      $('pPrecio').textContent=modo===1?fmt(r.precioLista):pct(r.margen);
+      $('pPrecio').className='grande '+(r.ganancia<0?'neg':'');
+      $('pCobrado').textContent=L.num(d.descuento)>0?'Con el descuento, el cliente paga '+fmt(r.precioCobrado)+'.':'';
+      $('desglose').innerHTML=
+        fila('Lo que paga el cliente',fmt(r.precioCobrado))+
+        fila('− IVA',fmt(r.iva))+
+        fila('= Ingreso neto',fmt(r.neto))+
+        fila('− Costo',fmt(r.costo))+
+        (r.envio?fila('− Envío',fmt(r.envio)):'')+
+        fila('− Comisiones',fmt(r.comision))+
+        (r.otros?fila('− Otros porcentajes',fmt(r.otros)):'')+
+        fila('= Tu ganancia por unidad',fmt(r.ganancia),r.ganancia<0?'neg':'pos')+
+        fila('Margen sobre el neto',pct(r.margen),r.ganancia<0?'neg':'pos')+
+        fila('Recargo sobre el costo',L.num(d.costo)>0?pct(r.recargo):'—');
+      $('res').hidden=false;$('vacio').hidden=true;
+    }catch(e){
+      err.textContent=e.message;err.hidden=false;$('res').hidden=true;$('vacio').hidden=true;ult=null;
+    }
+  }
+  function setModo(m){
+    modo=m;
+    $('m1').className=m===1?'sel':'';$('m2').className=m===2?'sel':'';
+    $('m1').setAttribute('aria-pressed',m===1);$('m2').setAttribute('aria-pressed',m===2);
+    $('bloqueMargen').hidden=m!==1;$('bloquePrecio').hidden=m!==2;
+    $('redondeo').disabled=m!==1;
+    calcular();
+  }
+  function guardar(){try{localStorage.setItem(CLAVE,JSON.stringify(lista))}catch(e){}}
+  function esc(s){return s.replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+  function pintar(){
+    $('listaVacia').hidden=lista.length>0;$('tabla').hidden=lista.length===0;
+    $('csv').disabled=$('vaciar').disabled=lista.length===0;
+    $('filas').innerHTML=lista.map(function(x,i){return '<tr><td>'+esc(x.nombre)+'</td><td>'+x.costo.toFixed(2)+'</td><td>'+x.precio.toFixed(2)+'</td><td class="'+(x.ganancia<0?'neg':'')+'">'+x.ganancia.toFixed(2)+'</td><td>'+x.margen.toFixed(1)+' %</td><td><button type="button" data-i="'+i+'" aria-label="Quitar '+esc(x.nombre)+'">✕</button></td></tr>'}).join('');
+  }
+  $('f').addEventListener('input',calcular);
+  $('f').addEventListener('submit',function(e){e.preventDefault()});
+  $('pais').addEventListener('change',function(){$('bloqueIva').hidden=$('pais').value!=='otro';calcular()});
+  $('m1').onclick=function(){setModo(1)};$('m2').onclick=function(){setModo(2)};
+  $('ejemplo').onclick=function(){
+    setModo(1);
+    var v={nombre:'Vela de soja 200 g',moneda:'$',costo:'6,50',margen:'45',comision:'3,5',comisionFija:'0,30',envio:'1,20',descuento:'10',otros:'0',redondeo:'90'};
+    for(var k in v)$(k).value=v[k];
+    $('pais').value='21';$('bloqueIva').hidden=true;calcular();
+  };
+  $('limpiar').onclick=function(){
+    ['nombre','costo','precio'].forEach(function(i){$(i).value=''});
+    $('margen').value='40';['comision','comisionFija','envio','descuento','otros'].forEach(function(i){$(i).value='0'});
+    calcular();
+  };
+  $('agregar').onclick=function(){
+    if(!ult)return;
+    lista.push({nombre:ult.nombre,costo:ult.r.costo,precio:ult.r.precioLista,ganancia:ult.r.ganancia,margen:ult.r.margen});
+    guardar();pintar();
+  };
+  $('filas').addEventListener('click',function(e){var i=e.target.getAttribute&&e.target.getAttribute('data-i');if(i!==null&&i!==undefined){lista.splice(+i,1);guardar();pintar()}});
+  $('vaciar').onclick=function(){lista=[];guardar();pintar()};
+  $('copiar').onclick=function(){
+    if(!ult)return;var r=ult.r;
+    var t=ult.nombre+': precio '+fmt(r.precioLista)+' (IVA incl.), ganancia '+fmt(r.ganancia)+' por unidad, margen '+pct(r.margen)+'.';
+    var b=$('copiar');
+    function ok(){b.textContent='¡Copiado!';setTimeout(function(){b.textContent='Copiar resumen'},1500)}
+    if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(ok,function(){window.prompt('Copia el texto:',t)});
+    else window.prompt('Copia el texto:',t);
+  };
+  $('csv').onclick=function(){
+    var q=function(s){return '"'+String(s).replace(/"/g,'""')+'"'};
+    var filas=[['Producto','Costo','Precio con IVA','Ganancia','Margen %'].map(q).join(';')].concat(lista.map(function(x){return [q(x.nombre),x.costo.toFixed(2),x.precio.toFixed(2),x.ganancia.toFixed(2),x.margen.toFixed(1)].join(';')}));
+    var blob=new Blob(['\ufeff'+filas.join('\n')],{type:'text/csv;charset=utf-8'});
+    var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='lista-de-precios.csv';document.body.appendChild(a);a.click();a.remove();
+  };
+  pintar();
+})();
+</script>
+</body>
+</html>

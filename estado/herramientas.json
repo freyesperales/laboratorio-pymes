@@ -1,1 +1,16 @@
-{"ultimo_numero": 0, "herramientas": []}
+{
+  "ultimo_numero": 1,
+  "herramientas": [
+    {
+      "n": 1,
+      "fecha": "2026-10-29",
+      "nombre": "Precio Justo",
+      "slug": "001-precio-justo",
+      "gancho": "Pon tu costo y tu margen: te dice a qué precio publicar para que IVA, comisiones y descuentos no se coman tu ganancia.",
+      "categoria": "Gestión y finanzas",
+      "demo_url": "https://freyesperales.github.io/laboratorio-pymes/herramientas/001-precio-justo/",
+      "repo_url": "https://github.com/freyesperales/laboratorio-pymes/tree/main/herramientas/001-precio-justo",
+      "estado": "publicada"
+    }
+  ]
+}
