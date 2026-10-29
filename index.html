@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Laboratorio Pymes · herramientas gratuitas para pymes</title>
+<meta name="description" content="Herramientas gratuitas, en español y sin registro, para el marketing y la gestión de pequeñas empresas. Tus datos no salen de tu navegador.">
+<style>
+  :root { --tinta:#111; --suave:#555; --fondo:#fafaf7; --tarjeta:#fff; --borde:#e6e4dd; --acento:#e4572e; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; color:var(--tinta); background:var(--fondo); line-height:1.5; }
+  header { max-width: 1040px; margin: 0 auto; padding: 56px 16px 24px; }
+  h1 { font-size: clamp(2rem, 5vw, 3.2rem); margin: 0 0 8px; letter-spacing: -0.02em; }
+  header p { color: var(--suave); max-width: 640px; font-size: 1.1rem; margin: 0; }
+  .sello { display:inline-block; margin-top:16px; font-size:.85rem; background:#fff; border:1px solid var(--borde); border-radius:999px; padding:6px 12px; }
+  main { max-width: 1040px; margin: 0 auto; padding: 16px; display:grid; gap:16px; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+  .tarjeta { background:var(--tarjeta); border:1px solid var(--borde); border-radius:14px; padding:20px; display:flex; flex-direction:column; gap:8px; }
+  .cat { font-size:.75rem; text-transform:uppercase; letter-spacing:.06em; color:var(--acento); font-weight:700; }
+  .tarjeta h2 { font-size:1.2rem; margin:0; }
+  .tarjeta p { margin:0; color:var(--suave); flex:1; }
+  .tarjeta a { align-self:flex-start; background:var(--tinta); color:#fff; text-decoration:none; padding:8px 14px; border-radius:8px; font-weight:600; }
+  .vacio { grid-column: 1 / -1; color: var(--suave); text-align:center; padding:48px 0; }
+  footer { max-width:1040px; margin: 32px auto 0; padding: 24px 16px 48px; color:var(--suave); font-size:.9rem; border-top:1px solid var(--borde); }
+  footer a { color: var(--tinta); }
+</style>
+</head>
+<body>
+<header>
+  <h1>Laboratorio Pymes</h1>
+  <p>Herramientas gratuitas, en español y sin registro, para el marketing y la gestión de tu pequeña empresa. Nuevas cada lunes, miércoles y viernes.</p>
+  <span class="sello">🔒 Tus datos no salen de tu navegador</span>
+</header>
+<main id="catalogo">
+  <!-- TARJETAS: el agente agrega una tarjeta por herramienta, la más nueva primero -->
+  <div class="vacio">La primera herramienta llega muy pronto.</div>
+</main>
+<footer>
+  Un laboratorio de <a href="https://laura.lat">LAURA</a> y <a href="https://farp.dev">farp.dev</a>. ¿Necesitas una solución a medida? <a href="https://wa.me/56999968482">Escríbenos por WhatsApp</a>.
+</footer>
+</body>
+</html>
