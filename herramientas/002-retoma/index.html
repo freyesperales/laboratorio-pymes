@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Retoma · a quién escribir hoy para no perder ventas por WhatsApp</title>
+<meta name="description" content="Herramienta gratuita: anota a quién le enviaste una cotización o propuesta y te dice a quién escribir hoy, con el mensaje de seguimiento listo para WhatsApp. Sin registro.">
+<style>
+:root{--tinta:#14161a;--suave:#4b5260;--fondo:#fafaf7;--tarjeta:#fff;--borde:#dcd9d0;--acento:#b83a16;--ok:#1b6b3a;--mal:#a3201c;--aviso:#8a5a00}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--tinta);background:var(--fondo);line-height:1.5}
+.cont{max-width:960px;margin:0 auto;padding:0 16px}
+header{padding:32px 0 8px}
+h1{margin:0 0 6px;font-size:clamp(1.7rem,5vw,2.4rem);letter-spacing:-.02em}
+header p{margin:0;color:var(--suave);max-width:660px}
+.priv{display:inline-block;margin-top:12px;font-size:.85rem;background:#fff;border:1px solid var(--borde);border-radius:999px;padding:5px 12px}
+.caja{background:var(--tarjeta);border:1px solid var(--borde);border-radius:14px;padding:18px;margin-top:16px}
+.caja h2{margin:0 0 12px;font-size:1.05rem}
+.campos{display:grid;gap:12px;grid-template-columns:1fr}
+@media(min-width:700px){.campos{grid-template-columns:1fr 1fr 1fr}.campos .doble{grid-column:span 2}}
+label{display:block;font-size:.88rem;font-weight:600;margin-bottom:3px}
+.ayuda{font-weight:400;color:var(--suave);font-size:.8rem;display:block}
+input,select,textarea{width:100%;font:inherit;padding:10px;border:1px solid #8b8f98;border-radius:8px;background:#fff;color:var(--tinta);min-height:44px}
+textarea{min-height:90px}
+:focus-visible{outline:3px solid #1d4ed8;outline-offset:2px}
+button,.btn{font:inherit;cursor:pointer;border-radius:8px;border:1px solid var(--tinta);background:#fff;color:var(--tinta);padding:9px 14px;min-height:44px;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;justify-content:center}
+button.prim,.btn.prim{background:var(--tinta);color:#fff}
+.btn.wa{background:#0b6e3c;border-color:#0b6e3c;color:#fff}
+button.chico{min-height:36px;padding:5px 10px;font-size:.85rem}
+.acciones{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.resumen{display:flex;gap:10px;flex-wrap:wrap;margin:6px 0 0}
+.chip{border:1px solid var(--borde);border-radius:999px;padding:4px 12px;font-size:.88rem;background:#fff}
+.chip b{font-variant-numeric:tabular-nums}
+.err{background:#fdecea;border:1px solid #e3a09b;color:#7a1511;padding:10px 12px;border-radius:8px;margin-top:12px;white-space:pre-line}
+.ok{background:#e8f5ec;border:1px solid #9ccfae;color:#12532b;padding:10px 12px;border-radius:8px;margin-top:12px}
+.nota{font-size:.85rem;color:var(--suave);margin-top:10px}
+.item{border:1px solid var(--borde);border-left-width:6px;border-radius:10px;padding:12px;margin-top:10px;background:#fff}
+.item.atrasado{border-left-color:var(--mal)}.item.hoy{border-left-color:var(--acento)}.item.pendiente{border-left-color:#8b8f98}.item.enfriado{border-left-color:var(--aviso)}.item.ganado{border-left-color:var(--ok)}.item.perdido{border-left-color:#8b8f98;opacity:.8}
+.item h3{margin:0;font-size:1rem}
+.meta{font-size:.85rem;color:var(--suave);margin:2px 0 8px}
+.etq{font-weight:700}
+.atrasado .etq{color:var(--mal)}.hoy .etq{color:var(--acento)}.enfriado .etq{color:var(--aviso)}.ganado .etq{color:var(--ok)}
+.msg{width:100%;font-size:.92rem;min-height:72px}
+.fila{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+details{margin-top:16px}summary{cursor:pointer;font-weight:600;min-height:32px}
+.vacio{color:var(--suave);padding:16px 0}
+footer{margin:32px 0 0;padding:20px 0 40px;border-top:1px solid var(--borde);font-size:.88rem;color:var(--suave)}
+footer a{color:var(--tinta)}
+</style>
+</head>
+<body>
+<div class="cont">
+<header>
+  <h1>Retoma</h1>
+  <p>Anota a quién le enviaste una cotización o propuesta. Retoma te dice a quién escribir hoy (a los 2, 5 y 10 días) y te deja el mensaje listo para WhatsApp.</p>
+  <span class="priv">🔒 Tus datos no salen de tu navegador: se guardan solo en este equipo</span>
+</header>
+
+<section class="caja" aria-labelledby="t-nuevo">
+  <h2 id="t-nuevo">Agregar contacto</h2>
+  <form id="form" novalidate>
+    <div class="campos">
+      <div><label for="nombre">Nombre</label><input id="nombre" autocomplete="off" required></div>
+      <div><label for="telefono">Teléfono <span class="ayuda">con prefijo, p. ej. +56 9 1234 5678</span></label><input id="telefono" inputmode="tel" autocomplete="off"></div>
+      <div><label for="ultimo">Último contacto <span class="ayuda">cuándo le escribiste por última vez</span></label><input id="ultimo" type="date" required></div>
+      <div class="doble"><label for="tema">¿De qué se trató? <span class="ayuda">p. ej. «la cotización de la cocina»</span></label><input id="tema" autocomplete="off"></div>
+    </div>
+    <div class="acciones">
+      <button class="prim" type="submit">Agregar</button>
+      <button type="button" id="ejemplo">Probar con un ejemplo</button>
+    </div>
+    <div id="aviso" role="alert"></div>
+  </form>
+</section>
+
+<section class="caja" aria-labelledby="t-lista">
+  <h2 id="t-lista">Tus seguimientos</h2>
+  <div class="resumen" id="resumen" aria-live="polite"></div>
+  <div id="lista"></div>
+  <div class="acciones">
+    <button id="csv">Exportar CSV (copia de seguridad)</button>
+    <button id="importar">Importar CSV</button>
+    <input id="archivo" type="file" accept=".csv,text/csv" hidden>
+    <button id="vaciar">Borrar todo</button>
+  </div>
+  <p class="nota">Tip: tu lista vive en este navegador. Si cambias de equipo o limpias los datos del sitio, exporta antes el CSV.</p>
+</section>
+
+<details class="caja">
+  <summary>Ajustes: prefijo de país y mensajes</summary>
+  <div class="campos" style="margin-top:12px">
+    <div><label for="prefijo">Prefijo de país <span class="ayuda">se agrega si el teléfono no lo trae (56 Chile, 34 España, 52 México, 57 Colombia…)</span></label><input id="prefijo" inputmode="numeric" placeholder="56"></div>
+  </div>
+  <p class="nota">El mensaje cambia según el intento: 1.º recordatorio amable, 2.º retoma, 3.º cierre cordial. Después de tres intentos, el contacto pasa a «enfriado» y no se insiste más. Siempre puedes editar el texto antes de enviarlo.</p>
+</details>
+
+<footer>
+  <p>Herramienta gratuita del Laboratorio Pymes de <a href="https://laura.lat">LAURA</a> · <a href="https://laura.lat">laura.lat</a> · <a href="https://farp.dev">farp.dev</a>. 🔒 Tus datos no salen de tu navegador.</p>
+</footer>
+</div>
+
+<script src="logica.js"></script>
+<script>
+(function(){
+  'use strict';
+  var $=function(i){return document.getElementById(i)};
+  var CLAVE='retoma.v1',CLAVE_PREF='retoma.prefijo';
+  var lista=[],prefijo='';
+  function leer(k,def){try{var v=localStorage.getItem(k);return v===null?def:JSON.parse(v)}catch(e){return def}}
+  function guardar(){try{localStorage.setItem(CLAVE,JSON.stringify(lista));localStorage.setItem(CLAVE_PREF,JSON.stringify(prefijo))}catch(e){aviso('No se pudo guardar en este navegador (¿modo privado?). Exporta el CSV para no perder tu lista.','err')}}
+  lista=leer(CLAVE,[]);if(!Array.isArray(lista))lista=[];prefijo=leer(CLAVE_PREF,'');
+  $('prefijo').value=prefijo;
+
+  function hoy(){var d=new Date();return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2)}
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+  function aviso(t,cl){var a=$('aviso');a.innerHTML=t?'<div class="'+(cl||'ok')+'">'+esc(t)+'</div>':''}
+  function fechaLarga(iso){var d=Retoma.aDias(iso);if(d===null)return iso;var f=new Date(d*86400000);return f.toLocaleDateString('es',{day:'numeric',month:'short',timeZone:'UTC'})}
+  function haceCuanto(iso){var n=Retoma.aDias(hoy())-Retoma.aDias(iso);return n<=0?'hoy':n===1?'ayer':'hace '+n+' días'}
+  $('ultimo').value=hoy();
+
+  var ETQ={atrasado:'Atrasado',hoy:'Toca hoy',pendiente:'En espera',enfriado:'Enfriado',ganado:'Ganado',perdido:'Perdido',error:'Fecha inválida'};
+  function pintar(){
+    var h=hoy(),ord=Retoma.ordenar(lista,h),cuenta={};
+    ord.forEach(function(x){cuenta[x.e.clave]=(cuenta[x.e.clave]||0)+1});
+    $('resumen').innerHTML=['atrasado','hoy','pendiente','enfriado'].map(function(k){return '<span class="chip">'+ETQ[k]+': <b>'+(cuenta[k]||0)+'</b></span>'}).join('');
+    if(!ord.length){$('lista').innerHTML='<p class="vacio">Todavía no hay contactos. Agrega el primero arriba o usa «Probar con un ejemplo».</p>';return}
+    $('lista').innerHTML=ord.map(function(x){
+      var c=x.c,e=x.e,i=lista.indexOf(c),abierto=e.clave==='atrasado'||e.clave==='hoy';
+      var cuando=e.clave==='atrasado'?'Debías escribirle hace '+e.diasTarde+(e.diasTarde===1?' día':' días'):e.clave==='hoy'?'Escríbele hoy':e.clave==='pendiente'?'Escríbele el '+fechaLarga(e.proximo):e.clave==='enfriado'?'Ya hiciste 3 intentos; no insistas más':'';
+      var texto=Retoma.mensaje(c);
+      var url=Retoma.enlaceWa(c,texto,prefijo);
+      var h3='<h3>'+esc(c.nombre)+'</h3><div class="meta"><span class="etq">'+ETQ[e.clave]+'</span>'+(cuando?' · '+cuando:'')+' · último contacto '+haceCuanto(c.ultimo)+' · intentos: '+(parseInt(c.toques,10)||0)+'/3'+(c.tema?' · '+esc(c.tema):'')+'</div>';
+      var cuerpo='';
+      if(abierto||e.clave==='pendiente'){
+        cuerpo='<label for="m'+i+'" class="ayuda">Mensaje (puedes editarlo)</label><textarea class="msg" id="m'+i+'" data-i="'+i+'">'+esc(texto)+'</textarea>'+
+        '<div class="fila">'+(url?'<a class="btn wa" data-a="wa" data-i="'+i+'" href="'+esc(url)+'" target="_blank" rel="noopener">Enviar por WhatsApp</a>':'<span class="nota">Sin teléfono válido: copia el mensaje.</span>')+
+        '<button class="chico" data-a="copiar" data-i="'+i+'">Copiar mensaje</button>'+
+        '<button class="chico" data-a="hecho" data-i="'+i+'">Ya le escribí</button>'+
+        '<button class="chico" data-a="ganado" data-i="'+i+'">Ganado</button><button class="chico" data-a="perdido" data-i="'+i+'">Perdido</button>'+
+        '<button class="chico" data-a="borrar" data-i="'+i+'" aria-label="Eliminar a '+esc(c.nombre)+'">Eliminar</button></div>';
+      }else{
+        cuerpo='<div class="fila">'+(e.clave==='enfriado'?'<button class="chico" data-a="ganado" data-i="'+i+'">Ganado</button><button class="chico" data-a="perdido" data-i="'+i+'">Perdido</button>':'<button class="chico" data-a="reabrir" data-i="'+i+'">Reabrir</button>')+'<button class="chico" data-a="borrar" data-i="'+i+'" aria-label="Eliminar a '+esc(c.nombre)+'">Eliminar</button></div>';
+      }
+      return '<article class="item '+e.clave+'">'+h3+cuerpo+'</article>';
+    }).join('');
+  }
+
+  function marcarEscrito(c){c.toques=(parseInt(c.toques,10)||0)+1;c.ultimo=hoy()}
+  $('lista').addEventListener('click',function(ev){
+    var b=ev.target.closest('[data-a]');if(!b)return;
+    var i=+b.getAttribute('data-i'),c=lista[i],a=b.getAttribute('data-a');if(!c)return;
+    if(a==='copiar'){
+      var t=$('m'+i).value;
+      var fin=function(){b.textContent='¡Copiado!';setTimeout(function(){b.textContent='Copiar mensaje'},1500)};
+      if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(fin,function(){window.prompt('Copia el texto:',t)});else window.prompt('Copia el texto:',t);
+      return;
+    }
+    if(a==='wa'){ // se abre el enlace; al volver, sugerimos registrar el intento
+      var ta=$('m'+i);if(ta){b.href=Retoma.enlaceWa(c,ta.value,prefijo)}
+      setTimeout(function(){if(window.confirm('¿Ya le enviaste el mensaje a '+c.nombre+'? Aceptar lo marca como enviado hoy.')){marcarEscrito(c);guardar();pintar()}},1200);
+      return;
+    }
+    if(a==='hecho')marcarEscrito(c);
+    else if(a==='ganado')c.resultado='ganado';
+    else if(a==='perdido')c.resultado='perdido';
+    else if(a==='reabrir'){c.resultado='';c.toques=0;c.ultimo=hoy()}
+    else if(a==='borrar'){if(!window.confirm('¿Eliminar a '+c.nombre+'?'))return;lista.splice(i,1)}
+    guardar();pintar();
+  });
+
+  $('form').addEventListener('submit',function(e){
+    e.preventDefault();
+    var n=$('nombre').value.trim(),u=$('ultimo').value,tel=$('telefono').value.trim();
+    if(!n){aviso('Escribe el nombre del contacto.','err');$('nombre').focus();return}
+    if(Retoma.aDias(u)===null){aviso('Elige una fecha válida para el último contacto.','err');$('ultimo').focus();return}
+    if(tel&&!Retoma.telefono(tel,prefijo)){aviso('El teléfono no parece válido. Incluye el prefijo del país (p. ej. +56…) o ponlo en Ajustes.','err');$('telefono').focus();return}
+    lista.push({nombre:n,telefono:tel,tema:$('tema').value.trim(),ultimo:u,toques:0,resultado:''});
+    guardar();pintar();aviso('Agregado: '+n+'.','ok');
+    ['nombre','telefono','tema'].forEach(function(k){$(k).value=''});$('nombre').focus();
+  });
+
+  $('ejemplo').onclick=function(){
+    var h=Retoma.aDias(hoy()),f=function(d){return Retoma.aIso(h-d)};
+    lista=lista.concat([
+      {nombre:'Camila Rojas (ejemplo)',telefono:'+56 9 1111 2222',tema:'la cotización de la remodelación',ultimo:f(9),toques:0,resultado:''},
+      {nombre:'Taller Mecánico Sur (ejemplo)',telefono:'+56 9 3333 4444',tema:'el presupuesto de mantención',ultimo:f(2),toques:0,resultado:''},
+      {nombre:'Javier Soto (ejemplo)',telefono:'+56 9 5555 6666',tema:'el catálogo de uniformes',ultimo:f(5),toques:1,resultado:''},
+      {nombre:'Panadería La Espiga (ejemplo)',telefono:'',tema:'el pedido de fin de mes',ultimo:f(1),toques:0,resultado:''},
+      {nombre:'Marta Díaz (ejemplo)',telefono:'+56 9 7777 8888',tema:'la propuesta de diseño',ultimo:f(30),toques:3,resultado:''}
+    ]);
+    guardar();pintar();aviso('Cargué 5 contactos de ejemplo. Bórralos cuando quieras.','ok');
+  };
+  $('prefijo').addEventListener('change',function(){prefijo=this.value.replace(/[^\d]/g,'');this.value=prefijo;guardar();pintar()});
+
+  $('csv').onclick=function(){
+    if(!lista.length){aviso('No hay nada que exportar todavía.','err');return}
+    var blob=new Blob(['﻿'+Retoma.aCsv(lista)],{type:'text/csv;charset=utf-8'});
+    var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='retoma-'+hoy()+'.csv';document.body.appendChild(a);a.click();a.remove();
+  };
+  $('importar').onclick=function(){$('archivo').click()};
+  $('archivo').addEventListener('change',function(){
+    var f=this.files[0];if(!f)return;var inp=this;
+    var r=new FileReader();
+    r.onload=function(){
+      var res=Retoma.parseCsv(r.result);
+      if(res.contactos.length){lista=lista.concat(res.contactos);guardar();pintar()}
+      if(res.errores.length)aviso((res.contactos.length?'Importé '+res.contactos.length+'. ':'No pude importar. ')+'Problemas:\n'+res.errores.slice(0,6).join('\n')+(res.errores.length>6?'\n…y '+(res.errores.length-6)+' más.':''),'err');
+      else aviso('Importé '+res.contactos.length+' contactos.','ok');
+      inp.value='';
+    };
+    r.onerror=function(){aviso('No pude leer el archivo.','err')};
+    r.readAsText(f,'utf-8');
+  });
+  $('vaciar').onclick=function(){if(lista.length&&window.confirm('¿Borrar todos los contactos de este navegador? Exporta antes el CSV si quieres conservarlos.')){lista=[];guardar();pintar();aviso('Lista vacía.','ok')}};
+  pintar();
+})();
+</script>
+</body>
+</html>

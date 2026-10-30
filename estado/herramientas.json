@@ -1,5 +1,5 @@
 {
-  "ultimo_numero": 1,
+  "ultimo_numero": 2,
   "herramientas": [
     {
       "n": 1,
@@ -10,6 +10,17 @@
       "categoria": "Gestión y finanzas",
       "demo_url": "https://freyesperales.github.io/laboratorio-pymes/herramientas/001-precio-justo/",
       "repo_url": "https://github.com/freyesperales/laboratorio-pymes/tree/main/herramientas/001-precio-justo",
+      "estado": "publicada"
+    },
+    {
+      "n": 2,
+      "fecha": "2026-10-30",
+      "nombre": "Retoma",
+      "slug": "002-retoma",
+      "gancho": "Anota a quién le enviaste una cotización y te dice a quién escribir hoy, con el mensaje de seguimiento listo para WhatsApp.",
+      "categoria": "Ventas y WhatsApp",
+      "demo_url": "https://freyesperales.github.io/laboratorio-pymes/herramientas/002-retoma/",
+      "repo_url": "https://github.com/freyesperales/laboratorio-pymes/tree/main/herramientas/002-retoma",
       "estado": "publicada"
     }
   ]
