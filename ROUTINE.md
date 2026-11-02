@@ -38,7 +38,7 @@ Corre las pruebas hasta que pasen. Abre el HTML con un navegador sin interfaz (P
 1. Actualiza `estado/herramientas.json`: agrega `{n, fecha (UTC), nombre, slug, gancho, categoria, demo_url, repo_url, estado}` y fija `ultimo_numero = N`.
 2. Actualiza el catálogo `index.html` de la raíz (la portada de GitHub Pages): una tarjeta por herramienta, con nombre, gancho, categoría y botón «Usar». Mantén su diseño.
 3. Agrega una fila al índice del `README.md` raíz.
-4. Commit `herramienta NNN: <nombre>` y push a `origin main`. Si push a `main` es rechazado, sube la rama `herramienta-NNN` y abre un pull request, y dilo en el informe.
+4. **Primero la identidad de git (obligatorio, para que el commit cuente en el perfil de GitHub de Francisco):** antes de hacer commit, ejecuta `git config user.name "Francisco Reyes"` y `git config user.email "21211939+freyesperales@users.noreply.github.com"`. Nunca hagas commit como `Claude <noreply@anthropic.com>`; agrega al final del mensaje el trailer `Co-Authored-By: Claude <noreply@anthropic.com>`. Después, commit `herramienta NNN: <nombre>` y push a `origin main`. Si push a `main` es rechazado, sube la rama `herramienta-NNN` y abre un pull request, y dilo en el informe.
 
 ## 6 · Informe
 Termina con: número, nombre, gancho, categoría, enlace a la demo, resultado de la publicación (push a main / PR / bloqueado y por qué) y lo que haya quedado degradado. Sé honesto y concreto.
