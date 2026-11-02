@@ -1,5 +1,5 @@
 {
-  "ultimo_numero": 2,
+  "ultimo_numero": 3,
   "herramientas": [
     {
       "n": 1,
@@ -21,6 +21,17 @@
       "categoria": "Ventas y WhatsApp",
       "demo_url": "https://freyesperales.github.io/laboratorio-pymes/herramientas/002-retoma/",
       "repo_url": "https://github.com/freyesperales/laboratorio-pymes/tree/main/herramientas/002-retoma",
+      "estado": "publicada"
+    },
+    {
+      "n": 3,
+      "fecha": "2026-11-02",
+      "nombre": "Etiquetero",
+      "slug": "003-etiquetero",
+      "gancho": "Crea enlaces con UTM siempre escritos igual, guarda tu historial y evita que «fb» y «Facebook» cuenten como fuentes distintas en Analytics.",
+      "categoria": "Marketing",
+      "demo_url": "https://freyesperales.github.io/laboratorio-pymes/herramientas/003-etiquetero/",
+      "repo_url": "https://github.com/freyesperales/laboratorio-pymes/tree/main/herramientas/003-etiquetero",
       "estado": "publicada"
     }
   ]

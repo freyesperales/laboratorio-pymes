@@ -12,6 +12,7 @@ Las construye un agente de IA que dirige [Francisco Reyes](https://farp.dev), de
 
 | N | Fecha | Herramienta | Categoría | Demo |
 |---|---|---|---|---|
+| 003 | 2026-11-02 | [Etiquetero](herramientas/003-etiquetero/) | Marketing | [Usar](https://freyesperales.github.io/laboratorio-pymes/herramientas/003-etiquetero/) |
 | 002 | 2026-10-30 | [Retoma](herramientas/002-retoma/) | Ventas y WhatsApp | [Usar](https://freyesperales.github.io/laboratorio-pymes/herramientas/002-retoma/) |
 | 001 | 2026-10-29 | [Precio Justo](herramientas/001-precio-justo/) | Gestión y finanzas | [Usar](https://freyesperales.github.io/laboratorio-pymes/herramientas/001-precio-justo/) |
 
