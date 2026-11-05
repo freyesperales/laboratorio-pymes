@@ -1,5 +1,5 @@
 {
-  "ultimo_numero": 3,
+  "ultimo_numero": 4,
   "herramientas": [
     {
       "n": 1,
@@ -32,6 +32,17 @@
       "categoria": "Marketing",
       "demo_url": "https://freyesperales.github.io/laboratorio-pymes/herramientas/003-etiquetero/",
       "repo_url": "https://github.com/freyesperales/laboratorio-pymes/tree/main/herramientas/003-etiquetero",
+      "estado": "publicada"
+    },
+    {
+      "n": 4,
+      "fecha": "2026-11-05",
+      "nombre": "Semana a Semana",
+      "slug": "004-semana-a-semana",
+      "gancho": "Anota lo que cobras y lo que pagas: te dice en qué semana te quedas sin caja, con 13 semanas de anticipación.",
+      "categoria": "Gestión y finanzas",
+      "demo_url": "https://freyesperales.github.io/laboratorio-pymes/herramientas/004-semana-a-semana/",
+      "repo_url": "https://github.com/freyesperales/laboratorio-pymes/tree/main/herramientas/004-semana-a-semana",
       "estado": "publicada"
     }
   ]

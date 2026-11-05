@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Semana a Semana · en qué semana te quedas sin caja</title>
+<meta name="description" content="Herramienta gratuita: proyecta tu flujo de caja a 13 semanas y mira en qué semana te quedas sin dinero. Sin registro; tus datos no salen del navegador.">
+<style>
+:root{--tinta:#14161a;--suave:#4b5260;--fondo:#fafaf7;--tarjeta:#fff;--borde:#dcd9d0;--acento:#b83a16;--ok:#1b6b3a;--mal:#a3201c}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--tinta);background:var(--fondo);line-height:1.5}
+.cont{max-width:1000px;margin:0 auto;padding:0 16px}
+header{padding:32px 0 8px}
+h1{margin:0 0 6px;font-size:clamp(1.7rem,5vw,2.4rem);letter-spacing:-.02em}
+header p{margin:0;color:var(--suave);max-width:680px}
+.priv{display:inline-block;margin-top:12px;font-size:.85rem;background:#fff;border:1px solid var(--borde);border-radius:999px;padding:5px 12px}
+.caja{background:var(--tarjeta);border:1px solid var(--borde);border-radius:14px;padding:18px;margin-top:16px}
+.caja h2{margin:0 0 12px;font-size:1.05rem}
+.campos{display:grid;gap:12px;grid-template-columns:1fr}
+@media(min-width:700px){.campos{grid-template-columns:repeat(3,1fr)}}
+label{display:block;font-size:.88rem;font-weight:600;margin-bottom:3px}
+.ayuda{font-weight:400;color:var(--suave);font-size:.8rem;display:block}
+input,select{width:100%;font:inherit;padding:10px;border:1px solid #8b8f98;border-radius:8px;background:#fff;color:var(--tinta);min-height:44px}
+:focus-visible{outline:3px solid #1d4ed8;outline-offset:2px}
+button{font:inherit;cursor:pointer;border-radius:8px;border:1px solid var(--tinta);background:#fff;color:var(--tinta);padding:9px 14px;min-height:44px;font-weight:600}
+button.prim{background:var(--tinta);color:#fff}
+button.chico{min-height:36px;padding:5px 10px;font-size:.85rem}
+.acciones{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.err{background:#fdecea;border:1px solid #e3a09b;color:#7a1511;padding:10px 12px;border-radius:8px;margin-top:12px;white-space:pre-line}
+.alerta{padding:14px 16px;border-radius:10px;margin-top:14px;font-weight:600}
+.alerta.mal{background:#fdecea;border:1px solid #e3a09b;color:#7a1511}
+.alerta.ok{background:#e8f5ec;border:1px solid #9ccfae;color:#12532b}
+.alerta.av{background:#fff6e0;border:1px solid #e3c97a;color:#5c3d00}
+.mov{border:1px solid var(--borde);border-radius:10px;padding:10px;margin-top:8px;background:#fff;display:grid;gap:8px;grid-template-columns:1fr 1fr}
+@media(min-width:800px){.mov{grid-template-columns:1.6fr .9fr 1fr 1.1fr 1fr .8fr auto;align-items:end}}
+.mov .sp{grid-column:1/-1}
+@media(min-width:800px){.mov .sp{grid-column:auto}}
+.tablaw{overflow-x:auto;margin-top:10px}
+table{border-collapse:collapse;width:100%;font-size:.88rem;min-width:620px}
+th,td{padding:7px 8px;border-bottom:1px solid var(--borde);text-align:right;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{background:#f3f1ea;font-size:.8rem}
+td.neg{color:var(--mal);font-weight:700;background:#fdecea}
+td.cob{color:var(--ok)}
+svg{width:100%;height:auto;display:block;margin-top:10px;background:#fff;border:1px solid var(--borde);border-radius:10px}
+.nota{font-size:.85rem;color:var(--suave);margin-top:10px}
+footer{margin:32px 0 0;padding:20px 0 40px;border-top:1px solid var(--borde);font-size:.88rem;color:var(--suave)}
+footer a{color:var(--tinta)}
+.sr{position:absolute;left:-9999px}
+@media print{.noimp{display:none}body{background:#fff}}
+</style>
+</head>
+<body>
+<div class="cont">
+<header>
+  <h1>Semana a Semana</h1>
+  <p>Anota con cuánto empiezas, qué vas a cobrar y qué vas a pagar. Te muestra en qué semana te quedas sin caja, con 13 semanas por delante, antes de que ocurra.</p>
+  <span class="priv">🔒 Tus datos no salen de tu navegador: se guardan solo en este equipo</span>
+</header>
+
+<section class="caja noimp" aria-labelledby="t-base">
+  <h2 id="t-base">1. Punto de partida</h2>
+  <div class="campos">
+    <div><label for="saldo">Dinero disponible hoy <span class="ayuda">Caja y bancos, en tu moneda</span></label><input id="saldo" type="text" inputmode="decimal" autocomplete="off"></div>
+    <div><label for="inicio">Fecha de inicio <span class="ayuda">Se ajusta al lunes de esa semana</span></label><input id="inicio" type="date"></div>
+    <div><label for="minimo">Colchón mínimo <span class="ayuda">Lo que no quieres bajar (opcional)</span></label><input id="minimo" type="text" inputmode="decimal" autocomplete="off" placeholder="0"></div>
+  </div>
+</section>
+
+<section class="caja noimp" aria-labelledby="t-mov">
+  <h2 id="t-mov">2. Cobros y pagos</h2>
+  <p class="nota" style="margin-top:0">Agrega cada cobro esperado y cada pago. Los fijos (alquiler, sueldos) márcalos como repetidos. En los cobros dudosos baja la probabilidad.</p>
+  <div id="lista"></div>
+  <div class="acciones">
+    <button type="button" class="chico" id="add-cobro">+ Cobro</button>
+    <button type="button" class="chico" id="add-pago">+ Pago</button>
+    <button type="button" class="chico" id="ejemplo">Probar con un ejemplo</button>
+    <button type="button" class="chico" id="limpiar">Borrar todo</button>
+  </div>
+  <div id="err" class="err" role="alert" hidden></div>
+</section>
+
+<section class="caja" aria-labelledby="t-res" aria-live="polite">
+  <h2 id="t-res">3. Tu flujo de caja</h2>
+  <div id="resumen"></div>
+  <svg id="grafico" viewBox="0 0 640 220" role="img" aria-label="Gráfico del saldo final de cada semana" hidden></svg>
+  <div class="tablaw"><table id="tabla" hidden></table></div>
+  <div class="acciones noimp">
+    <button type="button" class="prim" id="csv">Descargar CSV</button>
+    <button type="button" id="imprimir">Imprimir / guardar PDF</button>
+    <button type="button" id="copiar">Copiar resumen</button>
+  </div>
+  <p class="nota">Es una proyección con tus propias cifras, no asesoría financiera ni contable. Las semanas empiezan en lunes.</p>
+</section>
+
+<footer>
+  Herramienta gratuita del Laboratorio Pymes de <a href="https://laura.lat">LAURA</a> · <a href="https://laura.lat">laura.lat</a> · <a href="https://farp.dev">farp.dev</a>.
+  ¿Quieres algo a medida para tu negocio? <a href="https://wa.me/56999968482">Escríbenos por WhatsApp</a>.<br>
+  🔒 Tus datos no salen de tu navegador.
+</footer>
+</div>
+
+<script>
+/* Semana a Semana · lógica pura (sin DOM). Fechas ISO "AAAA-MM-DD", calculadas en UTC. */
+(function (raiz) {
+  'use strict';
+  var DIA = 86400000;
+
+  function aMs(iso) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(iso || '').trim());
+    if (!m) return NaN;
+    var ms = Date.UTC(+m[1], +m[2] - 1, +m[3]);
+    var d = new Date(ms);
+    if (d.getUTCFullYear() !== +m[1] || d.getUTCMonth() !== +m[2] - 1 || d.getUTCDate() !== +m[3]) return NaN;
+    return ms;
+  }
+  function aIso(ms) { return new Date(ms).toISOString().slice(0, 10); }
+  function sumaDias(iso, n) { return aIso(aMs(iso) + n * DIA); }
+
+  /* Lunes de la semana de una fecha. */
+  function lunesDe(iso) {
+    var ms = aMs(iso);
+    if (isNaN(ms)) return null;
+    var dow = new Date(ms).getUTCDay(); // 0 domingo
+    return aIso(ms - ((dow + 6) % 7) * DIA);
+  }
+
+  /* Número (0-based) de semana de una fecha respecto al lunes de inicio; null si cae fuera. */
+  function indiceSemana(fecha, inicio, semanas) {
+    var f = aMs(fecha), i = aMs(inicio);
+    if (isNaN(f) || isNaN(i)) return null;
+    var idx = Math.floor((f - i) / (7 * DIA));
+    return idx >= 0 && idx < semanas ? idx : null;
+  }
+
+  /* Convierte texto a número: acepta "1.234,56", "1,234.56", "1234", "$ 1.500". */
+  function numero(txt) {
+    if (typeof txt === 'number') return isFinite(txt) ? txt : NaN;
+    var s = String(txt == null ? '' : txt).replace(/[^\d.,\-]/g, '');
+    if (!s || s === '-') return NaN;
+    var ult = Math.max(s.lastIndexOf(','), s.lastIndexOf('.'));
+    if (ult >= 0) {
+      var dec = s.slice(ult + 1), ent = s.slice(0, ult).replace(/[.,]/g, '');
+      // un solo separador con exactamente 3 dígitos detrás y sin otro separador = miles
+      var cuenta = (s.match(/[.,]/g) || []).length;
+      if (cuenta === 1 && dec.length === 3) return Number(s.replace(/[.,]/g, ''));
+      return Number(ent + '.' + dec);
+    }
+    return Number(s);
+  }
+
+  /* Fechas en que ocurre un movimiento dentro del horizonte.
+     mov: {fecha, repite: 'una'|'semanal'|'quincenal'|'mensual', hasta?} */
+  function ocurrencias(mov, inicio, semanas) {
+    var fin = aMs(inicio) + semanas * 7 * DIA - DIA; // último día del horizonte
+    var hasta = mov.hasta ? aMs(mov.hasta) : fin;
+    if (isNaN(hasta) || hasta > fin) hasta = fin;
+    var f0 = aMs(mov.fecha);
+    if (isNaN(f0)) return [];
+    var out = [], rep = mov.repite || 'una';
+    if (rep === 'una') { if (f0 <= hasta) out.push(aIso(f0)); return out; }
+    if (rep === 'semanal' || rep === 'quincenal') {
+      var paso = (rep === 'semanal' ? 7 : 14) * DIA;
+      for (var t = f0, n = 0; t <= hasta && n < 2000; t += paso, n++) out.push(aIso(t));
+      return out;
+    }
+    if (rep === 'mensual') {
+      var d0 = new Date(f0), dia = d0.getUTCDate();
+      for (var k = 0; k < 60; k++) {
+        var y = d0.getUTCFullYear(), m = d0.getUTCMonth() + k;
+        var ultimo = new Date(Date.UTC(y, m + 1, 0)).getUTCDate();
+        var t2 = Date.UTC(y, m, Math.min(dia, ultimo)); // 31 → último día del mes
+        if (t2 > hasta) break;
+        out.push(aIso(t2));
+      }
+      return out;
+    }
+    return [];
+  }
+
+  /* Proyecta el flujo semana a semana.
+     movs: [{concepto, tipo:'cobro'|'pago', monto, fecha, repite, hasta, probabilidad?}]
+     devuelve {semanas:[{n, desde, hasta, cobros, pagos, neto, inicial, final, detalle:[...]}], ...resumen} */
+  function proyectar(saldoInicial, movs, inicio, semanas, opciones) {
+    opciones = opciones || {};
+    var ini = lunesDe(inicio);
+    if (!ini) throw new Error('La fecha de inicio no es válida.');
+    semanas = semanas || 13;
+    var minimo = Number(opciones.minimo) || 0;
+    var filas = [];
+    for (var i = 0; i < semanas; i++) {
+      filas.push({ n: i + 1, desde: sumaDias(ini, i * 7), hasta: sumaDias(ini, i * 7 + 6), cobros: 0, pagos: 0, neto: 0, inicial: 0, final: 0, detalle: [] });
+    }
+    (movs || []).forEach(function (m) {
+      var monto = numero(m.monto);
+      if (!isFinite(monto) || monto === 0) return;
+      var prob = m.probabilidad == null || m.probabilidad === '' ? 1 : Math.min(1, Math.max(0, Number(m.probabilidad)));
+      ocurrencias(m, ini, semanas).forEach(function (f) {
+        var idx = indiceSemana(f, ini, semanas);
+        if (idx === null) return;
+        var v = Math.abs(monto) * (m.tipo === 'cobro' ? prob : 1);
+        if (m.tipo === 'cobro') filas[idx].cobros += v; else filas[idx].pagos += v;
+        filas[idx].detalle.push({ concepto: m.concepto || '(sin nombre)', tipo: m.tipo, monto: v, fecha: f });
+      });
+    });
+    var saldo = Number(saldoInicial) || 0;
+    var primeraNegativa = null, primeraBajoMinimo = null, peor = null;
+    filas.forEach(function (f) {
+      f.inicial = saldo;
+      f.neto = f.cobros - f.pagos;
+      f.final = saldo + f.neto;
+      saldo = f.final;
+      if (primeraNegativa === null && f.final < 0) primeraNegativa = f.n;
+      if (primeraBajoMinimo === null && f.final < minimo) primeraBajoMinimo = f.n;
+      if (peor === null || f.final < peor.final) peor = f;
+    });
+    return {
+      inicio: ini, semanas: filas, primeraNegativa: primeraNegativa, primeraBajoMinimo: primeraBajoMinimo,
+      saldoMinimo: peor ? peor.final : saldoInicial, semanaMinima: peor ? peor.n : null,
+      saldoFinal: filas.length ? filas[filas.length - 1].final : saldoInicial,
+      totalCobros: filas.reduce(function (a, f) { return a + f.cobros; }, 0),
+      totalPagos: filas.reduce(function (a, f) { return a + f.pagos; }, 0)
+    };
+  }
+
+  /* Cuánto falta cobrar adelantado (o recortar) para no pasar del mínimo: déficit máximo. */
+  function faltante(resultado, minimo) {
+    var m = Number(minimo) || 0;
+    return Math.max(0, m - resultado.saldoMinimo);
+  }
+
+  function escCsv(v) {
+    var s = String(v == null ? '' : v);
+    if (/^[=+\-@\t\r]/.test(s)) s = "'" + s; // evita fórmulas al abrir en Excel
+    return /[",;\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+  }
+  function aCsv(resultado) {
+    var l = [['Semana', 'Desde', 'Hasta', 'Saldo inicial', 'Cobros', 'Pagos', 'Saldo final'].join(';')];
+    resultado.semanas.forEach(function (f) {
+      l.push([f.n, f.desde, f.hasta, f.inicial.toFixed(2), f.cobros.toFixed(2), f.pagos.toFixed(2), f.final.toFixed(2)].map(escCsv).join(';'));
+    });
+    return l.join('\n');
+  }
+
+  var api = { aMs: aMs, aIso: aIso, lunesDe: lunesDe, sumaDias: sumaDias, indiceSemana: indiceSemana, numero: numero, ocurrencias: ocurrencias, proyectar: proyectar, faltante: faltante, aCsv: aCsv };
+  if (typeof module !== 'undefined' && module.exports) module.exports = api; else raiz.Flujo = api;
+})(typeof window !== 'undefined' ? window : this);
+
+</script>
+<script>
+(function(){
+'use strict';
+var CLAVE='lp004-semana-a-semana';
+var $=function(id){return document.getElementById(id)};
+var movs=[];
+var ultimo=null;
+
+function hoy(){return new Date().toISOString().slice(0,10)}
+function fmt(n){
+  var r=Math.round(n);
+  return (r<0?'−':'')+Math.abs(r).toLocaleString('es',{maximumFractionDigits:0});
+}
+function fFecha(iso){var p=iso.split('-');return p[2]+'/'+p[1]}
+function guardar(){
+  try{localStorage.setItem(CLAVE,JSON.stringify({saldo:$('saldo').value,inicio:$('inicio').value,minimo:$('minimo').value,movs:movs}))}catch(e){}
+}
+function cargar(){
+  try{var d=JSON.parse(localStorage.getItem(CLAVE)||'null');
+    if(d){$('saldo').value=d.saldo||'';$('inicio').value=d.inicio||hoy();$('minimo').value=d.minimo||'';movs=Array.isArray(d.movs)?d.movs:[];return true}}catch(e){}
+  return false;
+}
+function nuevo(tipo){return {concepto:'',tipo:tipo,monto:'',fecha:$('inicio').value||hoy(),repite:'una',probabilidad:100}}
+
+function dibujarLista(){
+  var c=$('lista');c.innerHTML='';
+  if(!movs.length){c.innerHTML='<p class="nota">Aún no hay movimientos. Agrega un cobro o un pago, o prueba con un ejemplo.</p>';return}
+  movs.forEach(function(m,i){
+    var d=document.createElement('div');d.className='mov';
+    d.innerHTML=
+      '<div class="sp"><label for="c'+i+'">'+(m.tipo==='cobro'?'Cobro':'Pago')+' · concepto</label><input id="c'+i+'" data-k="concepto" type="text" autocomplete="off"></div>'+
+      '<div><label for="m'+i+'">Monto</label><input id="m'+i+'" data-k="monto" type="text" inputmode="decimal" autocomplete="off"></div>'+
+      '<div><label for="f'+i+'">Fecha</label><input id="f'+i+'" data-k="fecha" type="date"></div>'+
+      '<div><label for="r'+i+'">Se repite</label><select id="r'+i+'" data-k="repite"><option value="una">Una vez</option><option value="semanal">Cada semana</option><option value="quincenal">Cada 2 semanas</option><option value="mensual">Cada mes</option></select></div>'+
+      '<div><label for="h'+i+'">Hasta (opcional)</label><input id="h'+i+'" data-k="hasta" type="date"></div>'+
+      '<div>'+(m.tipo==='cobro'?'<label for="p'+i+'">Probabilidad %</label><input id="p'+i+'" data-k="probabilidad" type="text" inputmode="numeric">':'')+'</div>'+
+      '<div><button type="button" class="chico" data-quitar="'+i+'" aria-label="Quitar este movimiento">Quitar</button></div>';
+    c.appendChild(d);
+    d.querySelectorAll('[data-k]').forEach(function(el){
+      var k=el.getAttribute('data-k');
+      el.value=m[k]==null?'':m[k];
+      el.addEventListener('input',function(){m[k]=el.value;recalcular()});
+      el.addEventListener('change',function(){m[k]=el.value;recalcular()});
+    });
+    d.querySelector('[data-quitar]').addEventListener('click',function(){movs.splice(i,1);dibujarLista();recalcular()});
+  });
+}
+
+function errores(){
+  var e=[];
+  if(isNaN(Flujo.numero($('saldo').value||'0'))) e.push('El dinero disponible no es un número.');
+  if(isNaN(Flujo.aMs($('inicio').value))) e.push('Elige una fecha de inicio.');
+  movs.forEach(function(m,i){
+    if(m.monto!==''&&isNaN(Flujo.numero(m.monto))) e.push('Movimiento '+(i+1)+': el monto no es un número.');
+    if(m.fecha&&isNaN(Flujo.aMs(m.fecha))) e.push('Movimiento '+(i+1)+': la fecha no es válida.');
+  });
+  return e;
+}
+
+function recalcular(){
+  guardar();
+  var er=errores();var caja=$('err');
+  if(er.length){caja.textContent=er.join('\n');caja.hidden=false;return}
+  caja.hidden=true;
+  var saldo=Flujo.numero($('saldo').value||'0');
+  var minimo=Flujo.numero($('minimo').value||'0');if(isNaN(minimo))minimo=0;
+  var lista=movs.filter(function(m){return m.monto!==''&&m.fecha}).map(function(m){
+    var p=m.tipo==='cobro'?Number(String(m.probabilidad).replace(',','.')):100;
+    if(!isFinite(p))p=100;
+    return {concepto:m.concepto,tipo:m.tipo,monto:m.monto,fecha:m.fecha,repite:m.repite,hasta:m.hasta||null,probabilidad:Math.min(100,Math.max(0,p))/100};
+  });
+  var r=Flujo.proyectar(saldo,lista,$('inicio').value,13,{minimo:minimo});
+  ultimo=r;
+  pintar(r,minimo);
+}
+
+function pintar(r,minimo){
+  var h='';
+  if(r.primeraNegativa){
+    var s=r.semanas[r.primeraNegativa-1];
+    h='<div class="alerta mal">Te quedas sin caja en la semana '+r.primeraNegativa+' ('+fFecha(s.desde)+' al '+fFecha(s.hasta)+'). El punto más bajo es '+fmt(r.saldoMinimo)+' en la semana '+r.semanaMinima+'. Necesitas cubrir al menos '+fmt(-r.saldoMinimo)+' antes de esa fecha: adelantar cobros, mover pagos o conseguir financiamiento.</div>';
+  }else if(minimo>0&&r.primeraBajoMinimo){
+    var s2=r.semanas[r.primeraBajoMinimo-1];
+    h='<div class="alerta av">No llegas a números negativos, pero en la semana '+r.primeraBajoMinimo+' ('+fFecha(s2.desde)+') bajas de tu colchón de '+fmt(minimo)+'. Te faltarían '+fmt(Flujo.faltante(r,minimo))+' para mantenerlo.</div>';
+  }else{
+    h='<div class="alerta ok">Con estos datos no te quedas sin caja en 13 semanas. Tu punto más bajo es '+fmt(r.saldoMinimo)+' (semana '+r.semanaMinima+') y terminas con '+fmt(r.saldoFinal)+'.</div>';
+  }
+  h+='<p class="nota">Cobros proyectados: '+fmt(r.totalCobros)+' · Pagos proyectados: '+fmt(r.totalPagos)+'</p>';
+  $('resumen').innerHTML=h;
+
+  var t='<caption class="sr">Flujo de caja semana a semana</caption><thead><tr><th scope="col">Semana</th><th scope="col">Saldo inicial</th><th scope="col">Cobros</th><th scope="col">Pagos</th><th scope="col">Saldo final</th></tr></thead><tbody>';
+  r.semanas.forEach(function(f){
+    t+='<tr><td>'+f.n+' · '+fFecha(f.desde)+'</td><td>'+fmt(f.inicial)+'</td><td class="cob">'+fmt(f.cobros)+'</td><td>'+fmt(f.pagos)+'</td><td class="'+(f.final<0?'neg':'')+'">'+fmt(f.final)+'</td></tr>';
+  });
+  $('tabla').innerHTML=t+'</tbody>';$('tabla').hidden=false;
+  grafico(r,minimo);
+}
+
+function grafico(r,minimo){
+  var svg=$('grafico');svg.hidden=false;
+  var W=640,H=220,pl=56,pr=10,pt=14,pb=26;
+  var vals=r.semanas.map(function(f){return f.final});
+  var mx=Math.max.apply(null,vals.concat([0,minimo])),mn=Math.min.apply(null,vals.concat([0]));
+  if(mx===mn){mx+=1;mn-=1}
+  var bw=(W-pl-pr)/13;
+  var y=function(v){return pt+(mx-v)/(mx-mn)*(H-pt-pb)};
+  var s='<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+y(0)+'" y2="'+y(0)+'" stroke="#4b5260"/>';
+  s+='<text x="'+(pl-6)+'" y="'+(y(0)+4)+'" text-anchor="end" font-size="11" fill="#4b5260">0</text>';
+  s+='<text x="'+(pl-6)+'" y="'+(y(mx)+10)+'" text-anchor="end" font-size="11" fill="#4b5260">'+fmt(mx)+'</text>';
+  if(mn<0)s+='<text x="'+(pl-6)+'" y="'+y(mn)+'" text-anchor="end" font-size="11" fill="#4b5260">'+fmt(mn)+'</text>';
+  if(minimo>0)s+='<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+y(minimo)+'" y2="'+y(minimo)+'" stroke="#8a5a00" stroke-dasharray="4 3"/>';
+  r.semanas.forEach(function(f,i){
+    var x=pl+i*bw+3,yy=Math.min(y(f.final),y(0)),hh=Math.max(2,Math.abs(y(f.final)-y(0)));
+    s+='<rect x="'+x+'" y="'+yy+'" width="'+(bw-6)+'" height="'+hh+'" fill="'+(f.final<0?'#a3201c':'#1b6b3a')+'" rx="2"><title>Semana '+f.n+': '+fmt(f.final)+'</title></rect>';
+    s+='<text x="'+(x+(bw-6)/2)+'" y="'+(H-8)+'" text-anchor="middle" font-size="11" fill="#4b5260">'+f.n+'</text>';
+  });
+  svg.innerHTML=s;
+}
+
+function descargar(nombre,texto,tipo){
+  var b=new Blob(['﻿'+texto],{type:tipo}),a=document.createElement('a');
+  a.href=URL.createObjectURL(b);a.download=nombre;document.body.appendChild(a);a.click();a.remove();
+  setTimeout(function(){URL.revokeObjectURL(a.href)},1000);
+}
+function resumenTexto(){
+  if(!ultimo)return '';
+  var r=ultimo,l=['Flujo de caja a 13 semanas (desde '+r.inicio+')'];
+  l.push(r.primeraNegativa?'Sin caja en la semana '+r.primeraNegativa+'. Punto más bajo: '+fmt(r.saldoMinimo)+' (semana '+r.semanaMinima+').':'Sin saldo negativo. Punto más bajo: '+fmt(r.saldoMinimo)+' (semana '+r.semanaMinima+').');
+  r.semanas.forEach(function(f){l.push('Semana '+f.n+' ('+fFecha(f.desde)+'): '+fmt(f.final))});
+  return l.join('\n');
+}
+
+$('add-cobro').addEventListener('click',function(){movs.push(nuevo('cobro'));dibujarLista();recalcular()});
+$('add-pago').addEventListener('click',function(){movs.push(nuevo('pago'));dibujarLista();recalcular()});
+$('limpiar').addEventListener('click',function(){if(confirm('¿Borrar todos los datos de esta herramienta en este equipo?')){movs=[];$('saldo').value='';$('minimo').value='';dibujarLista();recalcular()}});
+['saldo','inicio','minimo'].forEach(function(id){$(id).addEventListener('input',recalcular)});
+$('csv').addEventListener('click',function(){if(ultimo)descargar('flujo-13-semanas.csv',Flujo.aCsv(ultimo),'text/csv;charset=utf-8')});
+$('imprimir').addEventListener('click',function(){window.print()});
+$('copiar').addEventListener('click',function(){
+  var t=resumenTexto(),b=$('copiar');
+  var ok=function(){b.textContent='¡Copiado!';setTimeout(function(){b.textContent='Copiar resumen'},1500)};
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(ok,function(){window.prompt('Copia el texto:',t)});
+  else window.prompt('Copia el texto:',t);
+});
+$('ejemplo').addEventListener('click',function(){
+  var lun=Flujo.lunesDe(hoy());
+  $('saldo').value='3.500';$('inicio').value=lun;$('minimo').value='1.000';
+  movs=[
+    {concepto:'Alquiler del local',tipo:'pago',monto:'1.200',fecha:Flujo.sumaDias(lun,3),repite:'mensual',probabilidad:100},
+    {concepto:'Sueldos',tipo:'pago',monto:'2.400',fecha:Flujo.sumaDias(lun,11),repite:'mensual',probabilidad:100},
+    {concepto:'Proveedor de materiales',tipo:'pago',monto:'900',fecha:Flujo.sumaDias(lun,7),repite:'quincenal',probabilidad:100},
+    {concepto:'Ventas de mostrador',tipo:'cobro',monto:'1.100',fecha:Flujo.sumaDias(lun,4),repite:'semanal',probabilidad:100},
+    {concepto:'Factura cliente grande',tipo:'cobro',monto:'4.000',fecha:Flujo.sumaDias(lun,35),repite:'una',probabilidad:70},
+    {concepto:'Impuestos del mes',tipo:'pago',monto:'1.500',fecha:Flujo.sumaDias(lun,20),repite:'mensual',probabilidad:100}
+  ];
+  dibujarLista();recalcular();
+});
+
+if(!cargar()){$('inicio').value=hoy()}
+if(!$('inicio').value)$('inicio').value=hoy();
+dibujarLista();recalcular();
+})();
+</script>
+</body>
+</html>
