@@ -1,5 +1,5 @@
 {
-  "ultimo_numero": 4,
+  "ultimo_numero": 5,
   "herramientas": [
     {
       "n": 1,
@@ -43,6 +43,17 @@
       "categoria": "Gestión y finanzas",
       "demo_url": "https://freyesperales.github.io/laboratorio-pymes/herramientas/004-semana-a-semana/",
       "repo_url": "https://github.com/freyesperales/laboratorio-pymes/tree/main/herramientas/004-semana-a-semana",
+      "estado": "publicada"
+    },
+    {
+      "n": 5,
+      "fecha": "2026-11-06",
+      "nombre": "Atajos",
+      "slug": "005-atajos",
+      "gancho": "Escribe tu horario y tu dirección una vez y obtén las respuestas rápidas de WhatsApp Business de tu rubro, con atajo, bienvenida y ausencia listas para pegar.",
+      "categoria": "Ventas y WhatsApp",
+      "demo_url": "https://freyesperales.github.io/laboratorio-pymes/herramientas/005-atajos/",
+      "repo_url": "https://github.com/freyesperales/laboratorio-pymes/tree/main/herramientas/005-atajos",
       "estado": "publicada"
     }
   ]

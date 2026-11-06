@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Atajos · respuestas rápidas de WhatsApp Business listas para pegar</title>
+<meta name="description" content="Herramienta gratuita: elige tu rubro, escribe tu horario y dirección una vez y obtén respuestas rápidas con atajo (/horario, /pago…), más el mensaje de bienvenida y de ausencia. Sin registro.">
+<style>
+:root{--tinta:#14161a;--suave:#4b5260;--fondo:#fafaf7;--tarjeta:#fff;--borde:#dcd9d0;--acento:#b83a16;--ok:#12532b;--mal:#a3201c}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--tinta);background:var(--fondo);line-height:1.5}
+.cont{max-width:960px;margin:0 auto;padding:0 16px}
+header{padding:32px 0 8px}
+h1{margin:0 0 6px;font-size:clamp(1.7rem,5vw,2.4rem);letter-spacing:-.02em}
+header p{margin:0;color:var(--suave);max-width:680px}
+.priv{display:inline-block;margin-top:12px;font-size:.85rem;background:#fff;border:1px solid var(--borde);border-radius:999px;padding:5px 12px}
+.caja{background:var(--tarjeta);border:1px solid var(--borde);border-radius:14px;padding:18px;margin-top:16px}
+.caja h2{margin:0 0 12px;font-size:1.05rem}
+.campos{display:grid;gap:12px;grid-template-columns:1fr}
+@media(min-width:700px){.campos{grid-template-columns:1fr 1fr}.campos .doble{grid-column:span 2}}
+label{display:block;font-size:.88rem;font-weight:600;margin-bottom:3px}
+.ayuda{font-weight:400;color:var(--suave);font-size:.8rem;display:block}
+input,select,textarea{width:100%;font:inherit;padding:10px;border:1px solid #8b8f98;border-radius:8px;background:#fff;color:var(--tinta);min-height:44px}
+textarea{min-height:84px}
+:focus-visible{outline:3px solid #1d4ed8;outline-offset:2px}
+button{font:inherit;cursor:pointer;border-radius:8px;border:1px solid var(--tinta);background:#fff;color:var(--tinta);padding:9px 14px;min-height:44px;font-weight:600}
+button.prim{background:var(--tinta);color:#fff}
+button.chico{min-height:36px;padding:5px 10px;font-size:.85rem}
+.acciones{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.barra{display:flex;gap:10px;align-items:center;flex-wrap:wrap;position:sticky;top:0;background:var(--tarjeta);padding:8px 0;z-index:2}
+.cont-n{font-weight:700;font-variant-numeric:tabular-nums}
+.cont-n.pasa{color:var(--mal)}
+.err{background:#fdecea;border:1px solid #e3a09b;color:#7a1511;padding:10px 12px;border-radius:8px;margin-top:12px;white-space:pre-line}
+.ok{background:#e8f5ec;border:1px solid #9ccfae;color:#12532b;padding:10px 12px;border-radius:8px;margin-top:12px}
+.nota{font-size:.85rem;color:var(--suave);margin-top:10px}
+.item{border:1px solid var(--borde);border-radius:10px;padding:12px;margin-top:10px;background:#fff}
+.item.off{opacity:.6}
+.cab{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.cab input[type=checkbox]{width:22px;height:22px;min-height:0}
+.cab .tit{font-weight:700;flex:1;min-width:120px}
+.at{display:flex;align-items:center;gap:4px}
+.at span{font-weight:700}
+.at input{width:150px}
+.falta{color:var(--mal);font-size:.82rem;margin:4px 0 0}
+.item textarea{margin-top:8px}
+.sub{font-size:.8rem;color:var(--suave);margin-top:4px}
+details{margin-top:16px}summary{cursor:pointer;font-weight:600;min-height:32px}
+footer{margin:32px 0 0;padding:20px 0 40px;border-top:1px solid var(--borde);font-size:.88rem;color:var(--suave)}
+footer a{color:var(--tinta)}
+</style>
+</head>
+<body>
+<div class="cont">
+<header>
+  <h1>Atajos</h1>
+  <p>Escribe una vez tu horario, tu dirección y tus medios de pago. Atajos arma las respuestas rápidas de WhatsApp Business de tu rubro, con su atajo (<b>/horario</b>, <b>/pago</b>…), y los mensajes de bienvenida y de ausencia, listos para pegar.</p>
+  <span class="priv">🔒 Tus datos no salen de tu navegador: se guardan solo en este equipo</span>
+</header>
+
+<section class="caja" aria-labelledby="t-datos">
+  <h2 id="t-datos">1. Tu negocio</h2>
+  <div class="campos">
+    <div class="doble"><label for="rubro">Rubro</label>
+      <select id="rubro"></select></div>
+    <div><label for="negocio">Nombre del negocio</label><input id="negocio" autocomplete="off"></div>
+    <div><label for="horario">Horario <span class="ayuda">p. ej. lunes a viernes de 9:00 a 18:00; sábados de 10:00 a 14:00</span></label><input id="horario" autocomplete="off"></div>
+    <div><label for="direccion">Dirección <span class="ayuda">calle, número y comuna o ciudad</span></label><input id="direccion" autocomplete="off"></div>
+    <div><label for="pago">Medios de pago <span class="ayuda">p. ej. efectivo, transferencia, tarjetas</span></label><input id="pago" autocomplete="off"></div>
+    <div class="doble"><label for="web">Web, catálogo o carta <span class="ayuda">enlace opcional</span></label><input id="web" autocomplete="off" inputmode="url"></div>
+  </div>
+  <div class="acciones"><button type="button" id="ejemplo">Probar con un ejemplo</button></div>
+</section>
+
+<section class="caja" aria-labelledby="t-lista">
+  <h2 id="t-lista">2. Tus respuestas</h2>
+  <div class="barra">
+    <span>Respuestas rápidas marcadas: <span class="cont-n" id="contador" aria-live="polite"></span></span>
+    <button class="chico" id="todas">Marcar todas</button>
+    <button class="chico" id="ninguna">Desmarcar todas</button>
+  </div>
+  <div id="problemas" role="alert"></div>
+  <div id="lista"></div>
+  <div class="acciones">
+    <button class="prim" id="copiar-todo">Copiar todas las respuestas rápidas</button>
+    <button id="txt">Descargar .txt</button>
+    <button id="csv">Descargar CSV</button>
+    <button id="restaurar">Restaurar textos originales</button>
+  </div>
+  <div id="aviso" role="status"></div>
+  <p class="nota">Puedes editar cualquier texto antes de copiarlo. Los cambios se guardan en este navegador.</p>
+</section>
+
+<details class="caja">
+  <summary>Cómo pegarlas en WhatsApp Business</summary>
+  <ol>
+    <li>Abre WhatsApp Business → Herramientas para el negocio → <b>Respuestas rápidas</b> (el nombre y la ruta pueden variar según tu versión).</li>
+    <li>Crea una nueva: pega el texto en el mensaje y escribe el atajo (sin la barra «/»).</li>
+    <li>En un chat, escribe «/» y el atajo, y elige la respuesta.</li>
+    <li>Los mensajes de <b>bienvenida</b> y <b>ausencia</b> se configuran en Herramientas para el negocio → Mensaje de ausencia / Mensaje de bienvenida.</li>
+  </ol>
+  <p class="nota">WhatsApp limita la cantidad de respuestas rápidas guardadas (hoy, 50; confírmalo en tu app, porque Meta puede cambiarlo). Por eso Atajos te muestra cuántas marcaste. La app gratuita no admite variables: por eso los textos ya salen con tus datos puestos.</p>
+</details>
+
+<footer>
+  <p>Herramienta gratuita del Laboratorio Pymes de <a href="https://laura.lat">LAURA</a> · <a href="https://laura.lat">laura.lat</a> · <a href="https://farp.dev">farp.dev</a>. 🔒 Tus datos no salen de tu navegador. ¿Quieres automatizar tu atención? <a href="https://wa.me/56999968482">Escríbenos por WhatsApp</a>.</p>
+</footer>
+</div>
+
+<script src="logica.js"></script>
+<script>
+(function(){
+  'use strict';
+  var $=function(i){return document.getElementById(i)};
+  var CLAVE='atajos.v1';
+  var CAMPOS=['negocio','horario','direccion','pago','web'];
+  var estado={rubro:'general',datos:{},ed:{}}; // ed: id -> {atajo,texto,activo}
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+  try{var g=JSON.parse(localStorage.getItem(CLAVE)||'null');if(g&&typeof g==='object'){estado.rubro=Atajos.RUBROS[g.rubro]?g.rubro:'general';estado.datos=g.datos||{};estado.ed=g.ed||{}}}catch(e){}
+  function guardar(){try{localStorage.setItem(CLAVE,JSON.stringify(estado))}catch(e){aviso('No se pudo guardar en este navegador (¿modo privado?). Copia o descarga tus respuestas.','err')}}
+  function aviso(t,cl){$('aviso').innerHTML=t?'<div class="'+(cl||'ok')+'">'+esc(t)+'</div>':''}
+
+  var sel=$('rubro');
+  Object.keys(Atajos.RUBROS).forEach(function(k){var o=document.createElement('option');o.value=k;o.textContent=Atajos.RUBROS[k];sel.appendChild(o)});
+  sel.value=estado.rubro;
+  CAMPOS.forEach(function(k){$(k).value=estado.datos[k]||''});
+
+  // Elementos visibles: estado de edición + texto base. Un texto editado a mano no se vuelve a rellenar.
+  function elementos(){
+    return Atajos.plantillasDe(estado.rubro).map(function(p){
+      var ed=estado.ed[p.id]||{};
+      var base=Atajos.rellenar(p.texto,estado.datos);
+      var editado=typeof ed.texto==='string';
+      var texto=editado?ed.texto:base.texto;
+      return {id:p.id,tipo:p.tipo,titulo:p.titulo,atajo:typeof ed.atajo==='string'?ed.atajo:p.atajo,texto:texto,
+        activo:typeof ed.activo==='boolean'?ed.activo:(p.tipo==='rapida'),editado:editado,
+        faltan:base.faltan,
+        pendiente:/\[completa:/.test(texto)};
+    });
+  }
+  function ed(id){return estado.ed[id]||(estado.ed[id]={})}
+
+  function pintar(){
+    var els=elementos(),rapidas=els.filter(function(e){return e.tipo==='rapida'});
+    var n=rapidas.filter(function(e){return e.activo}).length;
+    var c=$('contador');c.textContent=n+' de '+Atajos.LIMITE;c.className='cont-n'+(n>Atajos.LIMITE?' pasa':'');
+    var pr=Atajos.validar(rapidas);
+    $('problemas').innerHTML=pr.length?'<div class="err">'+esc(pr.join('\n'))+'</div>':'';
+    var act=document.activeElement,idAct=act&&act.id,pos=act&&act.selectionStart;
+    $('lista').innerHTML=els.map(function(e){
+      var esR=e.tipo==='rapida';
+      return '<article class="item'+(e.activo?'':' off')+'">'+
+        '<div class="cab">'+(esR?'<input type="checkbox" id="c-'+e.id+'" data-id="'+e.id+'" data-k="activo"'+(e.activo?' checked':'')+' aria-label="Incluir «'+esc(e.titulo)+'»">':'')+
+        '<span class="tit">'+esc(e.titulo)+'</span>'+
+        (esR?'<span class="at"><span aria-hidden="true">/</span><label class="ayuda" for="a-'+e.id+'" style="margin:0;display:none">Atajo</label><input id="a-'+e.id+'" data-id="'+e.id+'" data-k="atajo" value="'+esc(e.atajo)+'" aria-label="Atajo de «'+esc(e.titulo)+'»" autocomplete="off"></span>':'')+
+        '<button class="chico" data-a="copiar" data-id="'+e.id+'">Copiar</button></div>'+
+        '<label class="ayuda" for="t-'+e.id+'" style="display:none">Texto</label>'+
+        '<textarea id="t-'+e.id+'" data-id="'+e.id+'" data-k="texto" aria-label="Texto de «'+esc(e.titulo)+'»">'+esc(e.texto)+'</textarea>'+
+        (e.pendiente?'<p class="falta">Falta completar datos arriba (aparece como [completa: …]).</p>':'')+
+        '</article>';
+    }).join('');
+    if(idAct&&$(idAct)&&/^[at]-/.test(idAct)){var el=$(idAct);el.focus();try{el.setSelectionRange(pos,pos)}catch(e){}}
+  }
+
+  $('lista').addEventListener('input',function(ev){
+    var t=ev.target,id=t.getAttribute('data-id'),k=t.getAttribute('data-k');if(!id)return;
+    if(k==='atajo'){var v=Atajos.normalizarAtajo(t.value);ed(id).atajo=v}
+    else if(k==='texto'){ed(id).texto=t.value}
+    else return;
+    guardar();
+    // actualizar contador y problemas sin repintar los campos de texto
+    var rapidas=elementos().filter(function(e){return e.tipo==='rapida'});
+    var pr=Atajos.validar(rapidas);
+    $('problemas').innerHTML=pr.length?'<div class="err">'+esc(pr.join('\n'))+'</div>':'';
+  });
+  $('lista').addEventListener('change',function(ev){
+    var t=ev.target,id=t.getAttribute('data-id'),k=t.getAttribute('data-k');if(!id)return;
+    if(k==='activo'){ed(id).activo=t.checked}
+    if(k==='atajo'){t.value=Atajos.normalizarAtajo(t.value);ed(id).atajo=t.value}
+    guardar();pintar();
+  });
+  function copiar(texto,btn,rotulo){
+    var fin=function(){if(btn){btn.textContent='¡Copiado!';setTimeout(function(){btn.textContent=rotulo},1500)}};
+    if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(texto).then(fin,function(){window.prompt('Copia el texto:',texto)});
+    else window.prompt('Copia el texto:',texto);
+  }
+  $('lista').addEventListener('click',function(ev){
+    var b=ev.target.closest('[data-a="copiar"]');if(!b)return;
+    var ta=$('t-'+b.getAttribute('data-id'));copiar(ta.value,b,'Copiar');
+  });
+
+  CAMPOS.forEach(function(k){$(k).addEventListener('input',function(){estado.datos[k]=this.value;guardar();pintar()})});
+  sel.addEventListener('change',function(){estado.rubro=this.value;guardar();pintar()});
+
+  function setAll(v){elementos().forEach(function(e){if(e.tipo==='rapida')ed(e.id).activo=v});guardar();pintar()}
+  $('todas').onclick=function(){setAll(true)};
+  $('ninguna').onclick=function(){setAll(false)};
+
+  function salida(){return elementos().map(function(e){return {tipo:e.tipo,atajo:e.atajo,texto:e.texto,activo:e.activo||e.tipo!=='rapida'}})}
+  function descargar(nombre,tipo,contenido){
+    var blob=new Blob([contenido],{type:tipo});var a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);a.download=nombre;document.body.appendChild(a);a.click();a.remove();
+  }
+  function revisar(){
+    var pr=Atajos.validar(elementos().filter(function(e){return e.tipo==='rapida'}));
+    if(pr.length){aviso('Corrige esto antes de exportar:\n'+pr.join('\n'),'err');return false}
+    if(!elementos().some(function(e){return e.tipo==='rapida'&&e.activo})){aviso('Marca al menos una respuesta rápida.','err');return false}
+    return true;
+  }
+  $('copiar-todo').onclick=function(){
+    if(!revisar())return;
+    var t=Atajos.exportarTexto(salida());copiar(t,this,'Copiar todas las respuestas rápidas');
+    aviso(elementos().some(function(e){return e.activo&&e.pendiente})?'Copiado, pero hay textos con [completa: …]. Revisa los datos de tu negocio.':'Copiado. Pega cada respuesta en WhatsApp Business (mira «Cómo pegarlas»).','ok');
+  };
+  $('txt').onclick=function(){if(!revisar())return;descargar('atajos-whatsapp.txt','text/plain;charset=utf-8',Atajos.exportarTexto(salida()));aviso('Descargado atajos-whatsapp.txt','ok')};
+  $('csv').onclick=function(){if(!revisar())return;descargar('atajos-whatsapp.csv','text/csv;charset=utf-8','﻿'+Atajos.aCsv(salida()));aviso('Descargado atajos-whatsapp.csv','ok')};
+  $('restaurar').onclick=function(){if(window.confirm('¿Volver a los textos y atajos originales? Se pierden tus ediciones.')){estado.ed={};guardar();pintar();aviso('Textos restaurados.','ok')}};
+
+  $('ejemplo').onclick=function(){
+    estado.rubro='belleza';sel.value='belleza';
+    estado.datos={negocio:'Peluquería Brillo (ejemplo)',horario:'martes a sábado de 10:00 a 19:00',direccion:'Av. Principal 123, local 4',pago:'efectivo, transferencia y tarjetas',web:'https://ejemplo.com/servicios'};
+    CAMPOS.forEach(function(k){$(k).value=estado.datos[k]});
+    estado.ed={};guardar();pintar();aviso('Cargué un ejemplo de peluquería. Cambia los datos por los tuyos.','ok');
+  };
+  pintar();
+})();
+</script>
+</body>
+</html>
