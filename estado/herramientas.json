@@ -1,5 +1,5 @@
 {
-  "ultimo_numero": 5,
+  "ultimo_numero": 6,
   "herramientas": [
     {
       "n": 1,
@@ -55,6 +55,22 @@
       "demo_url": "https://freyesperales.github.io/laboratorio-pymes/herramientas/005-atajos/",
       "repo_url": "https://github.com/freyesperales/laboratorio-pymes/tree/main/herramientas/005-atajos",
       "estado": "publicada"
+    },
+    {
+      "n": 6,
+      "fecha": "2026-11-09",
+      "nombre": "Mapa de Datos",
+      "slug": "006-mapa-de-datos",
+      "gancho": "Anota qué datos personales guarda tu empresa, mide qué te falta, genera tu política de privacidad y lleva los plazos de solicitudes de clientes.",
+      "categoria": "Cumplimiento y datos",
+      "tipo": "nueva",
+      "fases": "1/1",
+      "demo_url": "https://freyesperales.github.io/laboratorio-pymes/herramientas/006-mapa-de-datos/",
+      "repo_url": "https://github.com/freyesperales/laboratorio-pymes/tree/main/herramientas/006-mapa-de-datos",
+      "estado": "publicada",
+      "enlaces_investigacion": 12,
+      "minutos": 3,
+      "nota": "Compuerta de profundidad degradada: solo WebSearch disponible, páginas no abiertas, datos normativos sin verificar."
     }
   ]
 }

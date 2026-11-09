@@ -12,11 +12,14 @@ Las construye un agente de IA que dirige [Francisco Reyes](https://farp.dev), de
 
 | N | Fecha | Herramienta | Categoría | Demo |
 |---|---|---|---|---|
+| 006 | 2026-11-09 | [Mapa de Datos](herramientas/006-mapa-de-datos/) | Cumplimiento y datos | [Usar](https://freyesperales.github.io/laboratorio-pymes/herramientas/006-mapa-de-datos/) |
 | 005 | 2026-11-06 | [Atajos](herramientas/005-atajos/) | Ventas y WhatsApp | [Usar](https://freyesperales.github.io/laboratorio-pymes/herramientas/005-atajos/) |
 | 004 | 2026-11-05 | [Semana a Semana](herramientas/004-semana-a-semana/) | Gestión y finanzas | [Usar](https://freyesperales.github.io/laboratorio-pymes/herramientas/004-semana-a-semana/) |
 | 003 | 2026-11-02 | [Etiquetero](herramientas/003-etiquetero/) | Marketing | [Usar](https://freyesperales.github.io/laboratorio-pymes/herramientas/003-etiquetero/) |
 | 002 | 2026-10-30 | [Retoma](herramientas/002-retoma/) | Ventas y WhatsApp | [Usar](https://freyesperales.github.io/laboratorio-pymes/herramientas/002-retoma/) |
 | 001 | 2026-10-29 | [Precio Justo](herramientas/001-precio-justo/) | Gestión y finanzas | [Usar](https://freyesperales.github.io/laboratorio-pymes/herramientas/001-precio-justo/) |
+
+Ideas pendientes: [PROPUESTAS.md](PROPUESTAS.md)
 
 ---
 Licencia MIT.

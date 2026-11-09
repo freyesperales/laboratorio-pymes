@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mapa de Datos · inventario y política de privacidad para tu pyme</title>
+<meta name="description" content="Plataforma gratuita: haz el inventario de datos personales de tu empresa, mide tu preparación, genera tu política de privacidad y lleva los plazos de solicitudes de clientes. Sin registro; tus datos no salen del navegador.">
+<link rel="manifest" href="manifest.webmanifest">
+<style>
+:root{--tinta:#14161a;--suave:#4b5260;--fondo:#fafaf7;--tarjeta:#fff;--borde:#dcd9d0;--acento:#0b5d6b;--ok:#12532b;--mal:#a3201c;--amb:#8a5a00}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--tinta);background:var(--fondo);line-height:1.5}
+.cont{max-width:980px;margin:0 auto;padding:0 16px}
+header{padding:28px 0 8px}h1{margin:0 0 6px;font-size:clamp(1.7rem,5vw,2.4rem);letter-spacing:-.02em}
+header p{margin:0;color:var(--suave);max-width:700px}
+.priv{display:inline-block;margin-top:12px;font-size:.85rem;background:#fff;border:1px solid var(--borde);border-radius:999px;padding:5px 12px}
+.aviso{background:#fff8e1;border:1px solid #e6c766;border-radius:10px;padding:10px 12px;margin-top:14px;font-size:.88rem}
+nav[role=tablist]{display:flex;gap:6px;flex-wrap:wrap;margin-top:16px}
+nav button{font:inherit;cursor:pointer;border:1px solid var(--borde);background:#fff;border-radius:999px;padding:8px 14px;min-height:44px;font-weight:600;color:var(--tinta)}
+nav button[aria-selected=true]{background:var(--tinta);color:#fff;border-color:var(--tinta)}
+.caja{background:var(--tarjeta);border:1px solid var(--borde);border-radius:14px;padding:18px;margin-top:14px}
+.caja h2{margin:0 0 10px;font-size:1.1rem}
+.campos{display:grid;gap:12px;grid-template-columns:1fr}
+@media(min-width:700px){.campos{grid-template-columns:1fr 1fr}.doble{grid-column:span 2}}
+label{display:block;font-size:.88rem;font-weight:600;margin-bottom:3px}
+input,select,textarea{width:100%;font:inherit;padding:10px;border:1px solid #8b8f98;border-radius:8px;background:#fff;color:var(--tinta);min-height:44px}
+textarea{min-height:90px}
+input[type=checkbox]{width:22px;height:22px;min-height:0}
+:focus-visible{outline:3px solid #1d4ed8;outline-offset:2px}
+button.b{font:inherit;cursor:pointer;border-radius:8px;border:1px solid var(--tinta);background:#fff;color:var(--tinta);padding:9px 14px;min-height:44px;font-weight:600}
+button.prim{background:var(--tinta);color:#fff}button.chico{min-height:36px;padding:4px 10px;font-size:.85rem}
+.acc{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.err{background:#fdecea;border:1px solid #e3a09b;color:#7a1511;padding:10px 12px;border-radius:8px;margin-top:12px;white-space:pre-line}
+.ok{background:#e8f5ec;border:1px solid #9ccfae;color:#12532b;padding:10px 12px;border-radius:8px;margin-top:12px}
+.item{border:1px solid var(--borde);border-radius:10px;padding:10px 12px;margin-top:8px;background:#fff}
+.item b{display:block}.sub{font-size:.85rem;color:var(--suave)}
+.preg{border-top:1px solid var(--borde);padding:10px 0}.preg fieldset{border:0;margin:0;padding:0}
+.preg legend{font-weight:600;padding:0}.opc{display:flex;gap:16px;margin-top:6px;flex-wrap:wrap}
+.opc label{font-weight:400;display:flex;gap:6px;align-items:center;margin:0}.opc input{width:20px;height:20px;min-height:0}
+.medidor{font-size:2.6rem;font-weight:800;font-variant-numeric:tabular-nums}
+.barra{height:12px;background:#e8e6de;border-radius:6px;overflow:hidden}.barra>i{display:block;height:100%;background:var(--acento)}
+.tag{display:inline-block;font-size:.78rem;font-weight:700;padding:2px 8px;border-radius:999px;border:1px solid}
+.t-ok{color:var(--ok)}.t-urgente{color:var(--amb)}.t-vencida{color:var(--mal)}.t-resuelta{color:var(--suave)}
+pre{white-space:pre-wrap;background:#f3f1ea;border:1px solid var(--borde);border-radius:8px;padding:12px;font:inherit;font-size:.9rem}
+[hidden]{display:none!important}
+footer{margin:32px 0 0;padding:20px 0 40px;border-top:1px solid var(--borde);font-size:.88rem;color:var(--suave)}footer a{color:var(--tinta)}
+</style>
+</head>
+<body>
+<div class="cont">
+<header>
+  <h1>Mapa de Datos</h1>
+  <p>Anota qué datos personales guarda tu empresa, mide qué te falta, genera tu política de privacidad y lleva los plazos cuando un cliente pide ver o borrar sus datos.</p>
+  <span class="priv">🔒 Tus datos no salen de tu navegador: se guardan solo en este equipo</span>
+  <p class="aviso"><b>Ejemplo orientativo, no asesoría legal.</b> En Chile, medios reportan que la Ley 21.719 de datos personales entra en vigor el 1 de diciembre de 2026; esa fecha y los plazos de abajo no están verificados aquí en fuente oficial. El plazo de respuesta es editable. Consulta a un abogado para tu caso.</p>
+</header>
+
+<nav role="tablist" aria-label="Secciones" id="tabs"></nav>
+
+<section id="v-empresa" class="caja" role="tabpanel" aria-labelledby="t-empresa"></section>
+<section id="v-diag" class="caja" role="tabpanel" aria-labelledby="t-diag" hidden></section>
+<section id="v-inv" role="tabpanel" aria-labelledby="t-inv" hidden></section>
+<section id="v-pol" class="caja" role="tabpanel" aria-labelledby="t-pol" hidden></section>
+<section id="v-sol" role="tabpanel" aria-labelledby="t-sol" hidden></section>
+
+<div id="msg" role="status" aria-live="polite"></div>
+
+<section class="caja">
+  <h2>Tus datos: respaldo y traslado</h2>
+  <p class="sub">Todo vive en este navegador. Descarga un respaldo para llevarlo a otro equipo.</p>
+  <div class="acc">
+    <button class="b" id="ejemplo">Probar con un ejemplo</button>
+    <button class="b" id="exp-json">Exportar todo (JSON)</button>
+    <label class="b" style="display:inline-flex;align-items:center;margin:0;cursor:pointer">Importar JSON<input type="file" id="imp-json" accept=".json,application/json" hidden></label>
+    <button class="b" id="borrar">Borrar todo</button>
+  </div>
+</section>
+
+<footer>
+  <p>Plataforma gratuita del Laboratorio Pymes de LAURA · <a href="https://laura.lat">laura.lat</a> · <a href="https://farp.dev">farp.dev</a> · <a href="https://wa.me/56999968482">¿Necesitas algo a medida? Escríbenos</a></p>
+  <p>🔒 Tus datos no salen de tu navegador.</p>
+</footer>
+</div>
+<script src="logica.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
