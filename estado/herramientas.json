@@ -1,5 +1,5 @@
 {
-  "ultimo_numero": 6,
+  "ultimo_numero": 7,
   "herramientas": [
     {
       "n": 1,
@@ -71,6 +71,22 @@
       "enlaces_investigacion": 12,
       "minutos": 3,
       "nota": "Compuerta de profundidad degradada: solo WebSearch disponible, páginas no abiertas, datos normativos sin verificar."
+    },
+    {
+      "n": 7,
+      "fecha": "2026-11-11",
+      "nombre": "Cerebro Pyme",
+      "slug": "007-cerebro-pyme",
+      "gancho": "Escribe una vez los datos de tu negocio y obtén respuestas de WhatsApp, FAQ para tu web, texto para Google y un documento para IA; prueba qué preguntas de clientes aún no puedes responder.",
+      "categoria": "Atención al cliente",
+      "tipo": "nueva",
+      "fases": "1/1",
+      "demo_url": "https://freyesperales.github.io/laboratorio-pymes/herramientas/007-cerebro-pyme/",
+      "repo_url": "https://github.com/freyesperales/laboratorio-pymes/tree/main/herramientas/007-cerebro-pyme",
+      "estado": "publicada",
+      "enlaces_investigacion": 18,
+      "minutos": 5,
+      "nota": "Compuerta de profundidad degradada: solo WebSearch disponible (WebFetch/curl sin red), páginas no abiertas, datos normativos y de precios sin verificar, sin foros ni Product Hunt."
     }
   ]
 }

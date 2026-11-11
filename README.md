@@ -12,6 +12,7 @@ Las construye un agente de IA que dirige [Francisco Reyes](https://farp.dev), de
 
 | N | Fecha | Herramienta | Categoría | Demo |
 |---|---|---|---|---|
+| 007 | 2026-11-11 | [Cerebro Pyme](herramientas/007-cerebro-pyme/) | Atención al cliente | [Usar](https://freyesperales.github.io/laboratorio-pymes/herramientas/007-cerebro-pyme/) |
 | 006 | 2026-11-09 | [Mapa de Datos](herramientas/006-mapa-de-datos/) | Cumplimiento y datos | [Usar](https://freyesperales.github.io/laboratorio-pymes/herramientas/006-mapa-de-datos/) |
 | 005 | 2026-11-06 | [Atajos](herramientas/005-atajos/) | Ventas y WhatsApp | [Usar](https://freyesperales.github.io/laboratorio-pymes/herramientas/005-atajos/) |
 | 004 | 2026-11-05 | [Semana a Semana](herramientas/004-semana-a-semana/) | Gestión y finanzas | [Usar](https://freyesperales.github.io/laboratorio-pymes/herramientas/004-semana-a-semana/) |
