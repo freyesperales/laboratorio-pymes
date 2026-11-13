@@ -101,8 +101,8 @@
       "repo_url": "https://github.com/freyesperales/laboratorio-pymes/tree/main/herramientas/008-cuadra",
       "estado": "en-fases",
       "enlaces_investigacion": 22,
-      "minutos": 10,
-      "nota": "Primera corrida en el PC: 4 exploradores con WebSearch y WebFetch, fuentes abiertas; 2 verificadas por el orquestador. Prueba en navegador sin interfaz no disponible localmente; se revisó la demo publicada."
+      "minutos": 11,
+      "nota": "Primera corrida en el PC: 4 exploradores con WebSearch y WebFetch, 22 fuentes abiertas, 2 verificadas por el orquestador. 32 pruebas pasan. Sin navegador headless local (Edge no devolvió el DOM); la demo publicada se probó en el navegador integrado: ejemplo, carga pegada con tabulación, unión manual y vista móvil sin errores de consola."
     }
   ]
 }
