@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cuadra · concilia tu cartola con tus ventas</title>
+<meta name="description" content="Plataforma gratuita: sube la cartola o el extracto del banco y tu lista de pedidos o ventas. Cuadra te dice qué cobros llegaron, cuáles faltan, qué pagos cubren varios pedidos, cuánto se fue en comisiones y qué plata entró sin respaldo. Sin registro; tus datos no salen del navegador.">
+<meta name="theme-color" content="#0f5c4a">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+<a class="saltar" href="#principal">Saltar al contenido</a>
+<div class="cont">
+<header>
+  <h1>Cuadra</h1>
+  <p>Sube la cartola de tu banco y tu lista de pedidos o ventas. Cuadra te dice <b>qué cobros llegaron, cuáles faltan</b>, qué pagos cubren varios pedidos, cuánto se fue en comisiones y qué plata entró sin respaldo.</p>
+  <span class="priv">🔒 Tus datos no salen de tu navegador: la cartola se lee y se guarda solo en este equipo</span>
+</header>
+
+<ol class="pasos" id="tabs" role="tablist" aria-label="Pasos"></ol>
+
+<main id="principal">
+<section id="v-cartola" class="caja" role="tabpanel" aria-labelledby="t-cartola"></section>
+<section id="v-ventas" class="caja" role="tabpanel" aria-labelledby="t-ventas" hidden></section>
+<section id="v-cuadre" class="caja" role="tabpanel" aria-labelledby="t-cuadre" hidden></section>
+<section id="v-ajustes" class="caja" role="tabpanel" aria-labelledby="t-ajustes" hidden></section>
+</main>
+
+<div id="msg" role="status" aria-live="polite"></div>
+
+<section class="caja">
+  <h2>Tus datos: respaldo y traslado</h2>
+  <p class="sub">Todo vive en este navegador. Descarga un respaldo para seguir en otro equipo o para pasárselo a tu contador.</p>
+  <div class="acc">
+    <button class="b prim" id="ejemplo" type="button">Probar con un ejemplo</button>
+    <button class="b" id="exp-json" type="button">Exportar respaldo (JSON)</button>
+    <label class="b archivo">Importar respaldo<input type="file" id="imp-json" accept=".json,application/json"></label>
+    <button class="b" id="borrar" type="button">Borrar todo</button>
+  </div>
+</section>
+
+<footer>
+  <p>Plataforma gratuita del Laboratorio Pymes de LAURA · <a href="https://laura.lat">laura.lat</a> · <a href="https://farp.dev">farp.dev</a> · <a href="https://wa.me/56999968482">¿Necesitas conectarlo a tu sistema? Escríbenos</a></p>
+  <p>🔒 Tus datos no salen de tu navegador. Cuadra no reemplaza la contabilidad ni la boleta o factura electrónica: te ayuda a saber qué se pagó. Código abierto (MIT) en <a href="https://github.com/freyesperales/laboratorio-pymes/tree/main/herramientas/008-cuadra">GitHub</a>.</p>
+</footer>
+</div>
+<script src="logica.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

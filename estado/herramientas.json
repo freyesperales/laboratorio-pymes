@@ -1,5 +1,5 @@
 {
-  "ultimo_numero": 7,
+  "ultimo_numero": 8,
   "herramientas": [
     {
       "n": 1,
@@ -87,6 +87,22 @@
       "enlaces_investigacion": 18,
       "minutos": 5,
       "nota": "Compuerta de profundidad degradada: solo WebSearch disponible (WebFetch/curl sin red), páginas no abiertas, datos normativos y de precios sin verificar, sin foros ni Product Hunt."
+    },
+    {
+      "n": 8,
+      "fecha": "2026-11-13",
+      "nombre": "Cuadra",
+      "slug": "008-cuadra",
+      "gancho": "Sube la cartola de tu banco y tu lista de pedidos: te dice qué cobros llegaron, cuáles faltan, qué pagos cubren varios pedidos y qué plata entró sin respaldo.",
+      "categoria": "Gestión y finanzas",
+      "tipo": "nueva",
+      "fases": "1/2",
+      "demo_url": "https://freyesperales.github.io/laboratorio-pymes/herramientas/008-cuadra/",
+      "repo_url": "https://github.com/freyesperales/laboratorio-pymes/tree/main/herramientas/008-cuadra",
+      "estado": "en-fases",
+      "enlaces_investigacion": 22,
+      "minutos": 10,
+      "nota": "Primera corrida en el PC: 4 exploradores con WebSearch y WebFetch, fuentes abiertas; 2 verificadas por el orquestador. Prueba en navegador sin interfaz no disponible localmente; se revisó la demo publicada."
     }
   ]
 }

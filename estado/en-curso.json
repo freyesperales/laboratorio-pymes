@@ -1,0 +1,28 @@
+{
+  "n": 8,
+  "slug": "008-cuadra",
+  "nombre": "Cuadra",
+  "fases_total": 2,
+  "fase_actual": 1,
+  "plan": [
+    {
+      "fase": 1,
+      "objetivo": "CSV con columnas detectadas, motor de conciliación (exactos, agrupados, comisiones, empates, duplicados), confirmación y unión manual, informe CSV, respaldo JSON, sin conexión, ejemplo",
+      "hecho": true
+    },
+    {
+      "fase": 2,
+      "objetivo": "Lectura de .xlsx (SheetJS por CDN con versión fija), perfiles por banco guardados, reglas para movimientos recurrentes (aporte, reembolso), informe mensual por canal de cobro",
+      "hecho": false
+    }
+  ],
+  "siguiente_paso": "Fase 2: agregar lectura .xlsx con SheetJS fijado por versión en cdnjs; guardar el mapeo de columnas por nombre de cabecera como 'perfil de banco' y reaplicarlo solo; reglas glosa→categoría para abonos sin respaldo; pruebas nuevas en pruebas.mjs.",
+  "decisiones": [
+    "Solo ingresos (abonos) se cuadran contra ventas; cargos se ignoran en fase 1.",
+    "Ventana por defecto: 3 días antes y 10 después; comisión máxima 5 %; todo ajustable.",
+    "Empates no se adivinan: confianza 'revisar'.",
+    "Pagos agrupados: hasta 4 pedidos del mismo cliente (nombre ≥ 50 % o referencia en glosa), búsqueda limitada a 12 candidatos.",
+    "Lógica en logica.js (UMD) sin DOM; interfaz en app.js sin innerHTML con datos del usuario."
+  ],
+  "actualizado": "2026-11-13"
+}
