@@ -65,6 +65,7 @@
         if (typeof DecompressionStream === 'undefined') { aviso('Este navegador no puede abrir Excel directamente. Actualízalo o guarda el archivo como CSV.', true); return; }
         aviso('Leyendo el Excel en tu equipo…');
         X.leerXLSX(b, inflar).then(function (x) {
+          clearTimeout(msgT); vaciar($('msg'));
           var t = C.tablaDesdeFilas(x.filas);
           t.nota = 'Excel, hoja «' + (x.hoja || '1') + '»' + (x.hojas > 1 ? ' (la primera de ' + x.hojas + ')' : '');
           cb(t);
