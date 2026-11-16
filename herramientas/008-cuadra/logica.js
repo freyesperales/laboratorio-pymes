@@ -68,6 +68,23 @@
     return { cabecera: filas[ini], filas: filas.slice(ini + 1).filter(function (f) { return f.length >= ancho - 1; }), separador: sep, omitidas: ini };
   }
 
+  // Filas que vienen de un Excel o de una tabla HTML (ya separadas en celdas).
+  // La cabecera es la primera fila con al menos el 60 % de las celdas llenas de la fila más ancha.
+  function tablaDesdeFilas(filas) {
+    function llenas(f) { return (f || []).filter(function (x) { return x !== '' && x != null; }).length; }
+    var muestra = filas.slice(0, 60), ancho = 0;
+    muestra.forEach(function (f) { ancho = Math.max(ancho, llenas(f)); });
+    var umbral = Math.max(2, Math.ceil(ancho * 0.6));
+    var ini = filas.findIndex(function (f) { return llenas(f) >= umbral && (f || []).every(function (x) { return typeof x !== 'number'; }); });
+    if (ini < 0) return { cabecera: [], filas: [], separador: null, omitidas: 0 };
+    var cab = filas[ini].map(function (x) { return x == null ? '' : String(x).trim(); });
+    while (cab.length && cab[cab.length - 1] === '') cab.pop();
+    var datos = filas.slice(ini + 1).filter(function (f) { return llenas(f) >= 2; }).map(function (f) {
+      var r = []; for (var i = 0; i < cab.length; i++) { var v = f[i]; r.push(v == null ? '' : (typeof v === 'number' ? v : String(v).trim())); } return r;
+    });
+    return { cabecera: cab, filas: datos, separador: null, omitidas: ini };
+  }
+
   // ---------- Números y fechas ----------
   // Lee montos como «$ 1.234.567», «-12.500,50», «(3.000)», «1,234.56», «CLP 15000».
   function leerMonto(s, decimal) {
@@ -124,11 +141,12 @@
     cargo: /cargo|debe|egreso|giro|debito|salida/,
     glosa: /glosa|descrip|detalle|concepto|movimiento|referencia|comentario|observ/,
     cliente: /cliente|nombre|comprador|razon social|destinatario|contacto/,
-    id: /^(n|nro|num|numero|id|pedido|orden|folio|venta|boleta|factura)\b|pedido|orden|folio|n[°º]/
+    id: /^(n|nro|num|numero|id|pedido|orden|folio|venta|boleta|factura)\b|pedido|orden|folio|n[°º]/,
+    canal: /canal|origen|medio de pago|forma de pago|metodo de pago|^medio|plataforma|channel|source|gateway/
   };
   function adivinarColumnas(cabecera) {
     var n = cabecera.map(normalizar), mapa = {};
-    ['abono', 'cargo', 'fecha', 'glosa', 'cliente', 'id', 'monto'].forEach(function (k) {
+    ['abono', 'cargo', 'fecha', 'glosa', 'canal', 'cliente', 'id', 'monto'].forEach(function (k) {
       var i = n.findIndex(function (h, j) { return PISTAS[k].test(h) && Object.keys(mapa).every(function (x) { return mapa[x] !== j; }); });
       if (i >= 0) mapa[k] = i;
     });
@@ -148,7 +166,7 @@
       }
       if (monto == null && mapa.monto != null) monto = leerMonto(f[mapa.monto], decimal);
       if (!fecha || monto == null) { errores.push('Fila ' + (i + 1) + ': ' + (!fecha ? 'fecha ilegible' : 'monto ilegible')); return; }
-      out.push({ id: 'm' + (i + 1), fecha: fecha, monto: monto, glosa: mapa.glosa != null ? f[mapa.glosa] || '' : '' });
+      out.push({ id: 'm' + (i + 1), fecha: fecha, monto: monto, glosa: mapa.glosa != null ? String(f[mapa.glosa] || '') : '' });
     });
     return { lista: out, errores: errores };
   }
@@ -160,7 +178,7 @@
       if (!fecha || monto == null || monto <= 0) { errores.push('Fila ' + (i + 1) + ': ' + (!fecha ? 'fecha ilegible' : 'monto ilegible o cero')); return; }
       var ref = mapa.id != null && f[mapa.id] ? String(f[mapa.id]) : String(i + 1);
       var id = 'p' + ref; while (vistos[id]) id += '·'; vistos[id] = 1;
-      out.push({ id: id, ref: ref, fecha: fecha, monto: monto, cliente: mapa.cliente != null ? f[mapa.cliente] || '' : '' });
+      out.push({ id: id, ref: ref, fecha: fecha, monto: monto, cliente: mapa.cliente != null ? String(f[mapa.cliente] || '') : '', canal: mapa.canal != null ? String(f[mapa.canal] || '').trim() : '' });
     });
     return { lista: out, errores: errores };
   }
@@ -293,6 +311,101 @@
     };
   }
 
+  // ---------- Reglas: explicar abonos sin pedido (aportes, reembolsos, traspasos) ----------
+  // Una regla es {texto, categoria}: si la glosa contiene ese texto, el abono queda explicado.
+  // Se aplican solo a lo que quedó sin pedido, para no quitarle cobros reales al cuadre.
+  function reglaPara(glosa, reglas) {
+    var g = ' ' + normalizar(glosa) + ' ';
+    for (var i = 0; i < (reglas || []).length; i++) {
+      var t = normalizar(reglas[i].texto);
+      if (t && g.indexOf(' ' + t + ' ') >= 0) return reglas[i];
+    }
+    return null;
+  }
+  function explicar(res, reglas) {
+    var explicados = [], quedan = [];
+    res.sinRespaldo.forEach(function (m) {
+      var r = reglaPara(m.glosa, reglas);
+      if (r) explicados.push(Object.assign({}, m, { categoria: r.categoria })); else quedan.push(m);
+    });
+    var out = Object.assign({}, res, { sinRespaldo: quedan, explicados: explicados });
+    var tot = function (l) { return Math.round(l.reduce(function (s, m) { return s + m.monto; }, 0) * 100) / 100; };
+    out.resumen = Object.assign({}, res.resumen, { totalSinRespaldo: tot(quedan), totalExplicado: tot(explicados) });
+    return out;
+  }
+  // Propone el texto de una regla a partir de una glosa: las palabras con contenido, sin números.
+  function sugerirTextoRegla(glosa) {
+    return normalizar(glosa).split(' ').filter(function (w) { return w && !/\d/.test(w); }).slice(0, 3).join(' ');
+  }
+  function agregarRegla(reglas, texto, categoria) {
+    var t = normalizar(texto), c = String(categoria || '').trim();
+    if (t.length < 3) throw new Error('El texto de la regla debe tener al menos 3 letras.');
+    if (!c) throw new Error('Elige una categoría.');
+    return (reglas || []).filter(function (r) { return normalizar(r.texto) !== t; }).concat([{ texto: t, categoria: c }]);
+  }
+
+  // ---------- Perfiles de banco o de tienda: el mapeo de columnas se recuerda por la cabecera ----------
+  function firmaCabecera(cab) { return cab.map(normalizar).join('|'); }
+  function buscarPerfil(perfiles, lado, cab) {
+    var f = firmaCabecera(cab);
+    return (perfiles || []).filter(function (p) { return p.lado === lado && p.firma === f; })[0] || null;
+  }
+  function guardarPerfil(perfiles, lado, cab, mapa, decimal, nombre) {
+    var f = firmaCabecera(cab), previo = buscarPerfil(perfiles, lado, cab);
+    var p = { lado: lado, firma: f, nombre: previo ? previo.nombre : String(nombre || 'Perfil').replace(/\.(csv|txt|xlsx?|html?)$/i, '').slice(0, 60),
+      mapa: Object.assign({}, mapa), decimal: decimal || 'auto', usos: (previo ? previo.usos : 0) + 1 };
+    return (perfiles || []).filter(function (x) { return !(x.lado === lado && x.firma === f); }).concat([p]);
+  }
+
+  // ---------- Informe mensual por canal ----------
+  function informeMensual(res, movs, peds) {
+    var M = {}, P = {}, grupos = {}, meses = {};
+    movs.forEach(function (m) { M[m.id] = m; }); peds.forEach(function (p) { P[p.id] = p; });
+    function mes(f) { return f.slice(0, 7); }
+    function g(p) {
+      var canal = p.canal || 'Sin canal', k = mes(p.fecha) + '|' + canal;
+      return grupos[k] || (grupos[k] = { mes: mes(p.fecha), canal: canal, pedidos: 0, vendido: 0, cobrado: 0, pendiente: 0, comisiones: 0, _dias: [] });
+    }
+    function gm(k) { return meses[k] || (meses[k] = { mes: k, vendido: 0, cobrado: 0, pendiente: 0, comisiones: 0, sinRespaldo: 0, explicado: {} }); }
+    peds.forEach(function (p) { var x = g(p); x.pedidos++; x.vendido += p.monto; gm(mes(p.fecha)).vendido += p.monto; });
+    res.pares.forEach(function (par) {
+      var m = M[par.mov];
+      par.pedidos.forEach(function (id) {
+        var p = P[id]; if (!p) return;
+        var x = g(p); x.cobrado += p.monto; gm(mes(p.fecha)).cobrado += p.monto;
+        if (m) x._dias.push(Math.max(0, dias(p.fecha, m.fecha)));
+      });
+      if (par.diferencia < 0 && P[par.pedidos[0]]) { var p0 = P[par.pedidos[0]]; g(p0).comisiones -= par.diferencia; gm(mes(p0.fecha)).comisiones -= par.diferencia; }
+    });
+    res.pendientes.forEach(function (p) { g(p).pendiente += p.monto; gm(mes(p.fecha)).pendiente += p.monto; });
+    res.sinRespaldo.forEach(function (m) { gm(mes(m.fecha)).sinRespaldo += m.monto; });
+    (res.explicados || []).forEach(function (m) { var e = gm(mes(m.fecha)).explicado; e[m.categoria] = (e[m.categoria] || 0) + m.monto; });
+    var r2 = function (n) { return Math.round(n * 100) / 100; };
+    var filas = Object.keys(grupos).sort().map(function (k) {
+      var x = grupos[k];
+      return { mes: x.mes, canal: x.canal, pedidos: x.pedidos, vendido: r2(x.vendido), cobrado: r2(x.cobrado), pendiente: r2(x.pendiente), comisiones: r2(x.comisiones),
+        porcentaje: x.vendido ? Math.round(x.cobrado / x.vendido * 100) : 0,
+        diasCobro: x._dias.length ? Math.round(x._dias.reduce(function (s, d) { return s + d; }, 0) / x._dias.length * 10) / 10 : null };
+    });
+    var lm = Object.keys(meses).sort().map(function (k) {
+      var x = meses[k], ex = {}; Object.keys(x.explicado).forEach(function (c) { ex[c] = r2(x.explicado[c]); });
+      return { mes: k, vendido: r2(x.vendido), cobrado: r2(x.cobrado), pendiente: r2(x.pendiente), comisiones: r2(x.comisiones), sinRespaldo: r2(x.sinRespaldo), explicado: ex };
+    });
+    return { filas: filas, meses: lm };
+  }
+  function informeMensualCSV(inf) {
+    var out = [['mes', 'canal', 'pedidos', 'vendido', 'cobrado', 'pendiente', 'comisiones', 'porcentaje_cobrado', 'dias_promedio_cobro']];
+    inf.filas.forEach(function (f) { out.push([f.mes, f.canal, f.pedidos, f.vendido, f.cobrado, f.pendiente, f.comisiones, f.porcentaje, f.diasCobro == null ? '' : f.diasCobro]); });
+    out.push([]);
+    out.push(['mes', 'abonos sin pedido', 'categoría', 'monto explicado']);
+    inf.meses.forEach(function (m) {
+      var cats = Object.keys(m.explicado);
+      if (!cats.length) out.push([m.mes, m.sinRespaldo, '', '']);
+      cats.forEach(function (c, i) { out.push([m.mes, i === 0 ? m.sinRespaldo : '', c, m.explicado[c]]); });
+    });
+    return aCSV(out);
+  }
+
   // ---------- Exportación ----------
   function celda(v) {
     if (typeof v === 'number') return String(v);
@@ -303,16 +416,17 @@
   function aCSV(filas) { return '﻿' + filas.map(function (f) { return f.map(celda).join(';'); }).join('\r\n'); }
   function informeCSV(res, movs, peds) {
     var M = {}, P = {}; movs.forEach(function (m) { M[m.id] = m; }); peds.forEach(function (p) { P[p.id] = p; });
-    var filas = [['estado', 'pedido', 'fecha_pedido', 'cliente', 'monto_pedido', 'fecha_banco', 'glosa_banco', 'monto_banco', 'diferencia', 'confianza', 'motivo']];
+    var filas = [['estado', 'pedido', 'fecha_pedido', 'cliente', 'canal', 'monto_pedido', 'fecha_banco', 'glosa_banco', 'monto_banco', 'diferencia', 'confianza', 'motivo']];
     res.pares.forEach(function (x) {
       var m = M[x.mov];
       x.pedidos.forEach(function (id, i) {
         var p = P[id];
-        filas.push(['cobrado', p.ref, p.fecha, p.cliente, p.monto, m.fecha, m.glosa, i === 0 ? m.monto : '', i === 0 ? x.diferencia : '', x.confianza, x.motivo]);
+        filas.push(['cobrado', p.ref, p.fecha, p.cliente, p.canal || '', p.monto, m.fecha, m.glosa, i === 0 ? m.monto : '', i === 0 ? x.diferencia : '', x.confianza, x.motivo]);
       });
     });
-    res.pendientes.forEach(function (p) { filas.push(['pendiente', p.ref, p.fecha, p.cliente, p.monto, '', '', '', '', '', p.diasEsperando + ' días esperando']); });
-    res.sinRespaldo.forEach(function (m) { filas.push(['sin respaldo', '', '', '', '', m.fecha, m.glosa, m.monto, '', '', 'abono sin pedido asociado']); });
+    res.pendientes.forEach(function (p) { filas.push(['pendiente', p.ref, p.fecha, p.cliente, p.canal || '', p.monto, '', '', '', '', '', p.diasEsperando + ' días esperando']); });
+    res.sinRespaldo.forEach(function (m) { filas.push(['sin respaldo', '', '', '', '', '', m.fecha, m.glosa, m.monto, '', '', 'abono sin pedido asociado']); });
+    (res.explicados || []).forEach(function (m) { filas.push(['explicado', '', '', '', '', '', m.fecha, m.glosa, m.monto, '', '', m.categoria]); });
     return aCSV(filas);
   }
 
@@ -325,6 +439,8 @@
     o.opciones = Object.assign({}, OPC, o.opciones || {});
     o.fuentes = o.fuentes && typeof o.fuentes === 'object' ? o.fuentes : {};
     o.moneda = typeof o.moneda === 'string' ? o.moneda : 'CLP';
+    o.perfiles = Array.isArray(o.perfiles) ? o.perfiles.filter(function (p) { return p && (p.lado === 'cartola' || p.lado === 'ventas') && typeof p.firma === 'string' && p.mapa && typeof p.mapa === 'object'; }) : [];
+    o.reglas = Array.isArray(o.reglas) ? o.reglas.filter(function (r) { return r && typeof r.texto === 'string' && typeof r.categoria === 'string' && r.texto.trim(); }) : [];
     o.movs.forEach(function (m) { if (typeof m.monto !== 'number' || !leerFecha(m.fecha)) throw new Error('Movimiento inválido en el respaldo.'); });
     o.peds.forEach(function (p) { if (typeof p.monto !== 'number' || !leerFecha(p.fecha)) throw new Error('Pedido inválido en el respaldo.'); });
     return o;
@@ -360,11 +476,16 @@
     '1049,10-11-2026,Sofía Vidal,Instagram,"$22.490"'
   ].join('\n');
 
+  var CATEGORIAS = ['Aporte de socios', 'Préstamo', 'Reembolso o devolución', 'Traspaso entre cuentas propias', 'Venta sin registrar', 'Intereses o rescate', 'Otro ingreso'];
+
   var api = {
     normalizar: normalizar, palabras: palabras, parecido: parecido,
     detectarSeparador: detectarSeparador, leerCSV: leerCSV, leerMonto: leerMonto, leerFecha: leerFecha, dias: dias,
     adivinarColumnas: adivinarColumnas, aMovimientos: aMovimientos, aPedidos: aPedidos, refEnGlosa: refEnGlosa,
-    conciliar: conciliar, informeCSV: informeCSV, aCSV: aCSV, validarEstado: validarEstado,
+    conciliar: conciliar, informeCSV: informeCSV, aCSV: aCSV, validarEstado: validarEstado, tablaDesdeFilas: tablaDesdeFilas,
+    reglaPara: reglaPara, explicar: explicar, sugerirTextoRegla: sugerirTextoRegla, agregarRegla: agregarRegla,
+    firmaCabecera: firmaCabecera, buscarPerfil: buscarPerfil, guardarPerfil: guardarPerfil,
+    informeMensual: informeMensual, informeMensualCSV: informeMensualCSV, CATEGORIAS: CATEGORIAS,
     OPC: OPC, EJ_CARTOLA: EJ_CARTOLA, EJ_PEDIDOS: EJ_PEDIDOS
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.Cuadra = api;

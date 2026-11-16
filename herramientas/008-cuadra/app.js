@@ -1,10 +1,10 @@
 /* Cuadra · interfaz. Toda la lógica de cálculo está en logica.js. */
 (function () {
   'use strict';
-  var C = window.Cuadra, CLAVE = 'cuadra-v1';
+  var C = window.Cuadra, X = window.CuadraXLSX, CLAVE = 'cuadra-v1';
   var E = nuevo(), borr = { cartola: null, ventas: null }, filtro = 'todo', vista = 'cartola';
 
-  function nuevo() { return { app: 'cuadra', version: 1, movs: [], peds: [], manual: [], rechazos: [], opciones: Object.assign({}, C.OPC), moneda: 'CLP', fuentes: {} }; }
+  function nuevo() { return { app: 'cuadra', version: 2, movs: [], peds: [], manual: [], rechazos: [], opciones: Object.assign({}, C.OPC), moneda: 'CLP', fuentes: {}, perfiles: [], reglas: [] }; }
   function guardar() { try { localStorage.setItem(CLAVE, JSON.stringify(E)); } catch (e) { aviso('No se pudo guardar en este navegador (¿modo privado o sin espacio?). Exporta un respaldo para no perder el trabajo.', true); } }
   function cargar() { try { var s = localStorage.getItem(CLAVE); if (s) E = C.validarEstado(JSON.parse(s)); } catch (e) { E = nuevo(); } }
 
@@ -32,20 +32,54 @@
     var a = h('a', { href: URL.createObjectURL(new Blob([texto], { type: tipo })), download: nombre });
     document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500);
   }
+  // Texto de unos bytes: UTF-8 y, si aparecen caracteres rotos, Windows-1252 (CSV guardado por Excel en español).
+  function decodificar(b) {
+    var t = new TextDecoder('utf-8').decode(b);
+    if (t.indexOf('�') >= 0) { try { t = new TextDecoder('windows-1252').decode(b); } catch (e) {} }
+    return t;
+  }
   function leerArchivo(file, cb) {
     var r = new FileReader();
-    r.onload = function () {
-      var t = String(r.result);
-      // Excel en español suele guardar CSV en Windows-1252: si aparecen caracteres rotos, se relee así.
-      if (t.indexOf('�') >= 0) { var r2 = new FileReader(); r2.onload = function () { cb(String(r2.result)); }; r2.readAsText(file, 'windows-1252'); }
-      else cb(t);
-    };
+    r.onload = function () { cb(decodificar(new Uint8Array(r.result))); };
     r.onerror = function () { aviso('No se pudo leer el archivo.', true); };
-    r.readAsText(file, 'utf-8');
+    r.readAsArrayBuffer(file);
+  }
+  function inflar(u8) {
+    return new Response(new Blob([u8]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer().then(function (b) { return new Uint8Array(b); });
+  }
+  // Muchos bancos entregan un «.xls» que en realidad es una página web con una tabla: se lee la tabla más grande.
+  function filasDeHTML(texto) {
+    var doc = new DOMParser().parseFromString(texto, 'text/html'), mejor = null;
+    [].forEach.call(doc.querySelectorAll('table'), function (t) { if (!mejor || t.rows.length > mejor.rows.length) mejor = t; });
+    if (!mejor) return [];
+    return [].map.call(mejor.rows, function (tr) { return [].map.call(tr.cells, function (td) { return td.textContent.replace(/\s+/g, ' ').trim(); }); });
+  }
+  // Cualquier archivo -> tabla {cabecera, filas, omitidas}. El tipo se detecta por el contenido, no por la extensión.
+  function leerTabla(file, cb) {
+    var r = new FileReader();
+    r.onerror = function () { aviso('No se pudo leer el archivo.', true); };
+    r.onload = function () {
+      var b = new Uint8Array(r.result), tipo = X.tipoArchivo(b);
+      if (tipo === 'xls-antiguo') { aviso('Ese archivo es de Excel antiguo (.xls de 1997-2003). Ábrelo en Excel, usa «Guardar como → Libro de Excel (.xlsx)» o CSV y vuelve a subirlo.', true); return; }
+      if (tipo === 'zip') {
+        if (typeof DecompressionStream === 'undefined') { aviso('Este navegador no puede abrir Excel directamente. Actualízalo o guarda el archivo como CSV.', true); return; }
+        aviso('Leyendo el Excel en tu equipo…');
+        X.leerXLSX(b, inflar).then(function (x) {
+          var t = C.tablaDesdeFilas(x.filas);
+          t.nota = 'Excel, hoja «' + (x.hoja || '1') + '»' + (x.hojas > 1 ? ' (la primera de ' + x.hojas + ')' : '');
+          cb(t);
+        }).catch(function (e) { aviso(e && e.message ? e.message : 'No se pudo leer el Excel.', true); });
+        return;
+      }
+      var texto = decodificar(b);
+      if (tipo === 'html') { var t = C.tablaDesdeFilas(filasDeHTML(texto)); t.nota = 'tabla web (un «.xls» que en realidad es HTML)'; cb(t); return; }
+      cb(C.leerCSV(texto));
+    };
+    r.readAsArrayBuffer(file);
   }
 
   // ---------- pestañas ----------
-  var PASOS = [['cartola', 'Cartola del banco'], ['ventas', 'Pedidos o ventas'], ['cuadre', 'Cuadre'], ['ajustes', 'Ajustes']];
+  var PASOS = [['cartola', 'Cartola del banco'], ['ventas', 'Pedidos o ventas'], ['cuadre', 'Cuadre'], ['informe', 'Informe mensual'], ['ajustes', 'Ajustes']];
   function pestañas() {
     var ol = vaciar($('tabs'));
     PASOS.forEach(function (p, i) {
@@ -63,41 +97,42 @@
   // ---------- paso 1 y 2: carga de archivos ----------
   var CAMPOS = {
     cartola: [['fecha', 'Fecha', true], ['glosa', 'Descripción o glosa', false], ['abono', 'Abonos (lo que entra)', false], ['cargo', 'Cargos (lo que sale)', false], ['monto', 'Monto único (+ entra, − sale)', false]],
-    ventas: [['id', 'N° de pedido o boleta', false], ['fecha', 'Fecha', true], ['cliente', 'Cliente', false], ['monto', 'Total', true]]
+    ventas: [['id', 'N° de pedido o boleta', false], ['fecha', 'Fecha', true], ['cliente', 'Cliente', false], ['canal', 'Canal o medio de cobro', false], ['monto', 'Total', true]]
   };
   function pintarCarga(lado) {
     var sec = vaciar($('v-' + lado)), esC = lado === 'cartola';
     var lista = esC ? E.movs : E.peds;
     sec.appendChild(h('h2', { texto: esC ? '1. Sube la cartola o el extracto de tu banco' : '2. Sube tu lista de pedidos o ventas' }));
     sec.appendChild(h('p', { 'class': 'sub', texto: esC
-      ? 'En la web de tu banco, busca «Descargar cartola» o «Exportar movimientos» y elige CSV. Si solo te deja Excel, ábrelo y usa «Guardar como → CSV». También puedes copiar la tabla y pegarla aquí.'
-      : 'Exporta los pedidos de tu tienda o de tu planilla en CSV: necesita al menos la fecha y el total. Con el número de pedido y el nombre del cliente, el cuadre acierta mucho más.' }));
+      ? 'En la web de tu banco, busca «Descargar cartola» o «Exportar movimientos». Sirve el Excel (.xlsx) tal como lo entrega el banco, un CSV o copiar la tabla y pegarla aquí. La próxima vez, Cuadra recuerda las columnas de tu banco.'
+      : 'Exporta los pedidos de tu tienda o de tu planilla (Excel o CSV): necesita al menos la fecha y el total. Con el número de pedido, el cliente y el canal (Instagram, WhatsApp, web, enlace de pago) el cuadre acierta más y el informe mensual sale por canal.' }));
     if (lista.length) sec.appendChild(h('p', { 'class': 'ok', texto: 'Cargados: ' + lista.length + (esC ? ' movimientos' : ' pedidos') + (E.fuentes[lado] ? ' (de ' + E.fuentes[lado] + ')' : '') + '. Si subes otro archivo, reemplaza estos.' }));
     var ta = h('textarea', { id: 'pega-' + lado, 'aria-describedby': 'ayuda-' + lado, placeholder: esC ? 'Fecha;Descripción;Cargos;Abonos\n02/11/2026;TRANSF DE MARIA SOTO;;24.990' : 'N° pedido,Fecha,Cliente,Total\n1041,01-11-2026,María Soto,24990' });
     sec.appendChild(h('div', { 'class': 'acc' }, [
-      h('label', { 'class': 'b prim archivo' }, ['Elegir archivo CSV', h('input', { type: 'file', accept: '.csv,.txt,text/csv,text/plain', onchange: function (e) {
+      h('label', { 'class': 'b prim archivo' }, ['Elegir archivo (Excel o CSV)', h('input', { type: 'file', accept: '.xlsx,.xls,.csv,.txt,.htm,.html,text/csv,text/plain,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel', onchange: function (e) {
         var f = e.target.files[0]; if (!f) return;
-        if (/\.xlsx?$/i.test(f.name)) { aviso('Ese archivo es de Excel. Ábrelo y guárdalo como CSV (la lectura directa de Excel llega en la fase 2).', true); return; }
-        leerArchivo(f, function (t) { preparar(lado, t, f.name); }); e.target.value = '';
-      } })])
+        leerTabla(f, function (t) { preparar(lado, t, f.name); }); e.target.value = '';
+      } })]),
+      esC ? h('a', { 'class': 'b', href: 'ejemplos/cartola-ejemplo.xlsx', download: 'cartola-ejemplo.xlsx', texto: 'Bajar una cartola de ejemplo en Excel' }) : null
     ]));
     sec.appendChild(h('label', { 'for': 'pega-' + lado, style: 'margin-top:14px', texto: 'O pega aquí el contenido' }));
     sec.appendChild(ta);
     sec.appendChild(h('p', { id: 'ayuda-' + lado, 'class': 'sub', texto: 'Acepta separadores de punto y coma, coma o tabulación, montos como 1.234.567 o 1.234,56 y fechas como 02/11/2026.' }));
-    sec.appendChild(h('div', { 'class': 'acc' }, h('button', { 'class': 'b', type: 'button', texto: 'Leer lo pegado', onclick: function () { if (!ta.value.trim()) { aviso('Pega primero el contenido.', true); return; } preparar(lado, ta.value, 'texto pegado'); } })));
+    sec.appendChild(h('div', { 'class': 'acc' }, h('button', { 'class': 'b', type: 'button', texto: 'Leer lo pegado', onclick: function () { if (!ta.value.trim()) { aviso('Pega primero el contenido.', true); return; } preparar(lado, C.leerCSV(ta.value), 'texto pegado'); } })));
     if (borr[lado]) sec.appendChild(pintarMapa(lado));
   }
-  function preparar(lado, texto, nombre) {
-    var tabla = C.leerCSV(texto);
+  function preparar(lado, tabla, nombre) {
     if (!tabla.cabecera.length || !tabla.filas.length) { aviso('No encontré una tabla en ese contenido. Revisa que tenga una fila de títulos y filas de datos.', true); return; }
-    borr[lado] = { tabla: tabla, mapa: C.adivinarColumnas(tabla.cabecera), decimal: 'auto', nombre: nombre };
+    var perfil = C.buscarPerfil(E.perfiles, lado, tabla.cabecera);
+    borr[lado] = { tabla: tabla, mapa: perfil ? Object.assign({}, perfil.mapa) : C.adivinarColumnas(tabla.cabecera), decimal: perfil ? perfil.decimal : 'auto', nombre: nombre, perfil: perfil };
     pintar();
     var s = $('mapa-' + lado); if (s) s.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
   function pintarMapa(lado) {
     var b = borr[lado], caja = h('div', { id: 'mapa-' + lado, tabindex: '-1' });
     caja.appendChild(h('h3', { texto: '¿Qué hay en cada columna?' }));
-    caja.appendChild(h('p', { 'class': 'sub', texto: 'Lo adiviné a partir de los títulos' + (b.tabla.omitidas ? ' (salté ' + b.tabla.omitidas + ' líneas de encabezado del banco)' : '') + '. Corrige lo que no calce.' }));
+    caja.appendChild(h('p', { 'class': b.perfil ? 'ok' : 'sub', texto: (b.perfil ? 'Reconocí este formato: usé el perfil guardado «' + b.perfil.nombre + '».' : 'Lo adiviné a partir de los títulos.') +
+      (b.tabla.nota ? ' Leído como ' + b.tabla.nota + '.' : '') + (b.tabla.omitidas ? ' Salté ' + b.tabla.omitidas + ' líneas de encabezado.' : '') + ' Corrige lo que no calce: al confirmar, Cuadra recuerda este formato.' }));
     var g = h('div', { 'class': 'grid' });
     CAMPOS[lado].forEach(function (c) {
       var id = 'col-' + lado + '-' + c[0];
@@ -128,13 +163,14 @@
     var r = esC ? C.aMovimientos(b.tabla, m, b.decimal) : C.aPedidos(b.tabla, m, b.decimal);
     if (!r.lista.length) { aviso('No pude leer ninguna fila. Revisa las columnas y el separador decimal.\n' + r.errores.slice(0, 5).join('\n'), true); return; }
     if (esC) E.movs = r.lista; else E.peds = r.lista;
+    E.perfiles = C.guardarPerfil(E.perfiles, lado, b.tabla.cabecera, m, b.decimal, b.nombre);
     E.manual = []; E.rechazos = []; E.fuentes[lado] = b.nombre; borr[lado] = null; guardar();
     aviso('Listo: ' + r.lista.length + (esC ? ' movimientos' : ' pedidos') + ' leídos.' + (r.errores.length ? ' Se omitieron ' + r.errores.length + ' filas que no se pudieron leer (' + r.errores.slice(0, 3).join('; ') + (r.errores.length > 3 ? '…' : '') + ').' : ''), false);
     ir(esC ? (E.peds.length ? 'cuadre' : 'ventas') : (E.movs.length ? 'cuadre' : 'cartola'));
   }
 
   // ---------- paso 3: cuadre ----------
-  function resultado() { return C.conciliar(E.movs, E.peds, E.opciones, E.manual, E.rechazos); }
+  function resultado() { return C.explicar(C.conciliar(E.movs, E.peds, E.opciones, E.manual, E.rechazos), E.reglas); }
   function pintarCuadre() {
     var sec = vaciar($('v-cuadre'));
     sec.appendChild(h('h2', { texto: '3. Cuadre' }));
@@ -151,11 +187,11 @@
       kpi(dinero(r.totalPendiente), R.pendientes.length + ' pedidos sin cobro'),
       kpi(dinero(r.totalSinRespaldo), R.sinRespaldo.length + ' abonos sin pedido'),
       kpi(dinero(r.comisiones), 'descontado en comisiones')
-    ]));
+    ].concat(R.explicados.length ? [kpi(dinero(r.totalExplicado), R.explicados.length + ' abonos explicados por tus reglas')] : [])));
     if (r.revisar) sec.appendChild(h('p', { 'class': 'err', texto: 'Hay ' + r.revisar + ' cruce(s) dudoso(s): revísalos y confírmalos o descártalos.' }));
     if (R.duplicados.length) sec.appendChild(h('p', { 'class': 'err', texto: 'Ojo: ' + R.duplicados.length + ' abono(s) se repiten igual (mismo día, monto y glosa). Puede ser un cliente que pagó dos veces o una línea duplicada en la cartola.' }));
 
-    var F = [['todo', 'Todo'], ['revisar', 'Por revisar (' + r.revisar + ')'], ['pend', 'Sin cobro (' + R.pendientes.length + ')'], ['sin', 'Sin respaldo (' + R.sinRespaldo.length + ')'], ['ok', 'Cobrados (' + R.pares.length + ')']];
+    var F = [['todo', 'Todo'], ['revisar', 'Por revisar (' + r.revisar + ')'], ['pend', 'Sin cobro (' + R.pendientes.length + ')'], ['sin', 'Sin respaldo (' + R.sinRespaldo.length + ')'], ['ok', 'Cobrados (' + R.pares.length + ')']].concat(R.explicados.length ? [['exp', 'Explicados (' + R.explicados.length + ')']] : []);
     sec.appendChild(h('div', { 'class': 'filtros', role: 'group', 'aria-label': 'Filtrar' }, F.map(function (f) {
       return h('button', { type: 'button', 'aria-pressed': String(filtro === f[0]), texto: f[1], onclick: function () { filtro = f[0]; pintarCuadre(); } });
     })));
@@ -166,6 +202,7 @@
       .forEach(function (x) { if (filtro === 'ok' || filtro === 'todo' || x.confianza === 'revisar') lista.appendChild(itemPar(x, M, P)); });
     if (ver('pend')) R.pendientes.sort(function (a, b) { return b.diasEsperando - a.diasEsperando; }).forEach(function (p) { lista.appendChild(itemPend(p)); });
     if (ver('sin')) R.sinRespaldo.forEach(function (m) { lista.appendChild(itemSin(m, R.pendientes)); });
+    if (ver('exp')) R.explicados.forEach(function (m) { lista.appendChild(itemExp(m)); });
     if (!lista.firstChild) lista.appendChild(h('p', { 'class': 'vacio', texto: 'Nada en este filtro.' }));
     sec.appendChild(lista);
     sec.appendChild(h('div', { 'class': 'acc' }, [
@@ -207,14 +244,65 @@
       h('div', { 'class': 'fila' }, [h('div', {}, [h('span', { 'class': 'tag t-sin', texto: 'Sin respaldo' }), h('b', { texto: m.glosa || '(sin glosa)' })]), h('span', { 'class': 'monto', texto: dinero(m.monto) })]),
       h('div', { 'class': 'sub', texto: 'Abono del ' + fechaCorta(m.fecha) + '. Puede ser una venta sin registrar, un aporte, un reembolso o un pago duplicado.' }),
       pendientes.length ? h('div', { 'class': 'acc' }, [h('label', { 'for': id, 'class': 'sub', style: 'margin:0', texto: 'Unir a mano con:' }), sel,
-        h('button', { 'class': 'b chico', type: 'button', texto: 'Unir', onclick: function () { if (!sel.value) { aviso('Elige un pedido.', true); return; } E.manual.push({ mov: m.id, pedidos: [sel.value] }); guardar(); aviso('Unido a mano.'); pintarCuadre(); } })]) : null
+        h('button', { 'class': 'b chico', type: 'button', texto: 'Unir', onclick: function () { if (!sel.value) { aviso('Elige un pedido.', true); return; } E.manual.push({ mov: m.id, pedidos: [sel.value] }); guardar(); aviso('Unido a mano.'); pintarCuadre(); } })]) : null,
+      formRegla(m)
     ]);
+  }
+  function formRegla(m) {
+    var idT = 'regla-t-' + m.id, idC = 'regla-c-' + m.id;
+    var txt = h('input', { id: idT, type: 'text', value: C.sugerirTextoRegla(m.glosa), 'class': 'corto' });
+    var cat = h('select', { id: idC }, C.CATEGORIAS.map(function (c) { return h('option', { value: c, texto: c }); }));
+    return h('details', { 'class': 'regla' }, [h('summary', { texto: 'No es una venta: crear una regla' }),
+      h('p', { 'class': 'sub', texto: 'Todo abono sin pedido cuya glosa contenga este texto quedará marcado con la categoría, este mes y los siguientes.' }),
+      h('div', { 'class': 'acc' }, [h('label', { 'for': idT, 'class': 'sub', style: 'margin:0', texto: 'Si la glosa contiene' }), txt,
+        h('label', { 'for': idC, 'class': 'sub', style: 'margin:0', texto: 'es' }), cat,
+        h('button', { 'class': 'b chico', type: 'button', texto: 'Guardar regla', onclick: function () {
+          try { E.reglas = C.agregarRegla(E.reglas, txt.value, cat.value); } catch (err) { aviso(err.message, true); return; }
+          guardar(); aviso('Regla guardada: «' + C.normalizar(txt.value) + '» → ' + cat.value + '.'); pintarCuadre();
+        } })])]);
+  }
+  function itemExp(m) {
+    return h('div', { 'class': 'item exp' }, [
+      h('div', { 'class': 'fila' }, [h('div', {}, [h('span', { 'class': 'tag t-exp', texto: m.categoria }), h('b', { texto: m.glosa || '(sin glosa)' })]), h('span', { 'class': 'monto', texto: dinero(m.monto) })]),
+      h('div', { 'class': 'sub', texto: 'Abono del ' + fechaCorta(m.fecha) + ', explicado por una regla tuya. Puedes borrarla en Ajustes.' })
+    ]);
+  }
+
+  // ---------- paso 4: informe mensual ----------
+  var MESES_N = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+  function nombreMes(k) { var p = k.split('-'); return MESES_N[+p[1] - 1] + ' ' + p[0]; }
+  function pintarInforme() {
+    var sec = vaciar($('v-informe'));
+    sec.appendChild(h('h2', { texto: '4. Informe mensual por canal' }));
+    if (!E.movs.length || !E.peds.length) { sec.appendChild(h('p', { 'class': 'vacio', texto: 'Carga la cartola y los pedidos (o el ejemplo) para ver el informe.' })); return; }
+    var inf = C.informeMensual(resultado(), E.movs, E.peds);
+    sec.appendChild(h('p', { 'class': 'sub', texto: 'Por mes del pedido y por canal: cuánto vendiste, cuánto llegó al banco, cuánto falta, cuánto se fue en comisiones y cuántos días tarda en llegar la plata. Si tu lista no tiene columna de canal, todo sale como «Sin canal».' }));
+    inf.meses.forEach(function (mm) {
+      var filas = inf.filas.filter(function (f) { return f.mes === mm.mes; });
+      var celdas = function (f) { return [h('td', { texto: dinero(f.vendido) }), h('td', { texto: dinero(f.cobrado) }), h('td', { texto: (f.vendido ? Math.round(f.cobrado / f.vendido * 100) : 0) + ' %' }), h('td', { texto: dinero(f.pendiente) }), h('td', { texto: dinero(f.comisiones) })]; };
+      sec.appendChild(h('h3', { texto: nombreMes(mm.mes) }));
+      sec.appendChild(h('div', { 'class': 'tabla', role: 'region', 'aria-label': 'Informe de ' + nombreMes(mm.mes), tabindex: '0' }, h('table', {}, [
+        h('thead', {}, h('tr', {}, ['Canal', 'Pedidos', 'Vendido', 'Cobrado', '% cobrado', 'Pendiente', 'Comisiones', 'Días en llegar (promedio)'].map(function (t) { return h('th', { scope: 'col', texto: t }); }))),
+        h('tbody', {}, filas.map(function (f) {
+          return h('tr', {}, [h('th', { scope: 'row', texto: f.canal }), h('td', { texto: String(f.pedidos) })].concat(celdas(f), [h('td', { texto: f.diasCobro == null ? '—' : String(f.diasCobro).replace('.', ',') })]));
+        })),
+        h('tfoot', {}, h('tr', {}, [h('th', { scope: 'row', texto: 'Total' }), h('td', { texto: String(filas.reduce(function (s, f) { return s + f.pedidos; }, 0)) })].concat(celdas(mm), [h('td', { texto: '' })])))
+      ])));
+      var extra = [];
+      if (mm.sinRespaldo) extra.push(dinero(mm.sinRespaldo) + ' entraron sin pedido ni regla');
+      Object.keys(mm.explicado).forEach(function (c) { extra.push(dinero(mm.explicado[c]) + ' de «' + c + '»'); });
+      if (extra.length) sec.appendChild(h('p', { 'class': 'sub', texto: 'Otros abonos del mes en el banco: ' + extra.join(' · ') + '.' }));
+    });
+    sec.appendChild(h('div', { 'class': 'acc' }, [
+      h('button', { 'class': 'b prim', type: 'button', texto: 'Descargar informe mensual (CSV)', onclick: function () { descargar('cuadra-mensual-' + new Date().toISOString().slice(0, 10) + '.csv', C.informeMensualCSV(C.informeMensual(resultado(), E.movs, E.peds)), 'text/csv;charset=utf-8'); } }),
+      h('button', { 'class': 'b', type: 'button', texto: 'Imprimir o guardar PDF', onclick: function () { window.print(); } })
+    ]));
   }
 
   // ---------- paso 4: ajustes ----------
   function pintarAjustes() {
     var sec = vaciar($('v-ajustes')), o = E.opciones;
-    sec.appendChild(h('h2', { texto: '4. Ajustes del cuadre' }));
+    sec.appendChild(h('h2', { texto: '5. Ajustes del cuadre' }));
     function num(k, t, ayuda, max) {
       var id = 'op-' + k;
       return h('div', {}, [h('label', { 'for': id, texto: t }), h('input', { id: id, type: 'number', min: '0', max: String(max), step: '1', value: String(o[k]), 'aria-describedby': id + '-a',
@@ -228,6 +316,24 @@
     ]));
     var mon = h('select', { id: 'op-moneda', onchange: function () { E.moneda = this.value; guardar(); } }, [['CLP', 'Peso chileno (CLP)'], ['EUR', 'Euro (EUR)'], ['MXN', 'Peso mexicano (MXN)'], ['COP', 'Peso colombiano (COP)'], ['PEN', 'Sol (PEN)'], ['ARS', 'Peso argentino (ARS)'], ['USD', 'Dólar (USD)'], ['otra', 'Otra (sin símbolo)']].map(function (x) { return h('option', { value: x[0], texto: x[1], selected: E.moneda === x[0] }); }));
     sec.appendChild(h('div', { 'class': 'grid', style: 'margin-top:12px' }, h('div', {}, [h('label', { 'for': 'op-moneda', texto: 'Moneda para mostrar' }), mon])));
+    sec.appendChild(h('h3', { texto: 'Formatos recordados' }));
+    sec.appendChild(h('p', { 'class': 'sub', texto: 'Cada vez que confirmas las columnas de un archivo, Cuadra guarda su formato. Cuando subas la cartola del mismo banco, las columnas se eligen solas.' }));
+    if (!E.perfiles.length) sec.appendChild(h('p', { 'class': 'vacio', texto: 'Aún no hay formatos guardados.' }));
+    E.perfiles.forEach(function (p) {
+      sec.appendChild(h('div', { 'class': 'item' }, h('div', { 'class': 'fila' }, [
+        h('div', {}, [h('b', { texto: p.nombre }), h('span', { 'class': 'sub', texto: ' · ' + (p.lado === 'cartola' ? 'cartola' : 'pedidos') + ' · usado ' + p.usos + (p.usos === 1 ? ' vez' : ' veces') })]),
+        h('button', { 'class': 'b chico', type: 'button', texto: 'Olvidar', 'aria-label': 'Olvidar el formato ' + p.nombre, onclick: function () { E.perfiles = E.perfiles.filter(function (x) { return x !== p; }); guardar(); pintarAjustes(); } })
+      ])));
+    });
+    sec.appendChild(h('h3', { texto: 'Reglas para abonos que no son ventas' }));
+    sec.appendChild(h('p', { 'class': 'sub', texto: 'Se crean desde el cuadre, en cada abono «Sin respaldo». Solo se aplican a lo que no calzó con ningún pedido.' }));
+    if (!E.reglas.length) sec.appendChild(h('p', { 'class': 'vacio', texto: 'Aún no hay reglas.' }));
+    E.reglas.forEach(function (r) {
+      sec.appendChild(h('div', { 'class': 'item' }, h('div', { 'class': 'fila' }, [
+        h('div', {}, [h('span', { 'class': 'sub', texto: 'Si la glosa contiene ' }), h('b', { texto: '«' + r.texto + '»' }), h('span', { 'class': 'sub', texto: ' → ' + r.categoria })]),
+        h('button', { 'class': 'b chico', type: 'button', texto: 'Borrar', 'aria-label': 'Borrar la regla ' + r.texto, onclick: function () { E.reglas = E.reglas.filter(function (x) { return x !== r; }); guardar(); pintarAjustes(); } })
+      ])));
+    });
     sec.appendChild(h('h3', { texto: 'Cómo decide Cuadra' }));
     sec.appendChild(h('ol', { 'class': 'sub' }, [
       'Primero cruza los montos exactos dentro de la ventana de días. Gana el pedido cuyo número aparece en la glosa o cuyo cliente coincide con el nombre de quien transfirió; si no, el más cercano en fecha.',
@@ -237,13 +343,15 @@
     ].map(function (t) { return h('li', { texto: t }); })));
   }
 
-  function pintar() { pestañas(); if (vista === 'cartola' || vista === 'ventas') pintarCarga(vista); else if (vista === 'cuadre') pintarCuadre(); else pintarAjustes(); }
+  function pintar() { pestañas(); if (vista === 'cartola' || vista === 'ventas') pintarCarga(vista); else if (vista === 'cuadre') pintarCuadre(); else if (vista === 'informe') pintarInforme(); else pintarAjustes(); }
 
   // ---------- respaldo ----------
   $('ejemplo').addEventListener('click', function () {
     if ((E.movs.length || E.peds.length) && !confirm('Esto reemplaza tus datos actuales por el ejemplo. ¿Seguir?')) return;
     var tc = C.leerCSV(C.EJ_CARTOLA), tp = C.leerCSV(C.EJ_PEDIDOS);
-    E = nuevo(); E.movs = C.aMovimientos(tc, C.adivinarColumnas(tc.cabecera)).lista; E.peds = C.aPedidos(tp, C.adivinarColumnas(tp.cabecera)).lista;
+    var guardados = { perfiles: E.perfiles, reglas: E.reglas };
+    E = nuevo(); E.perfiles = guardados.perfiles; E.reglas = guardados.reglas;
+    E.movs = C.aMovimientos(tc, C.adivinarColumnas(tc.cabecera)).lista; E.peds = C.aPedidos(tp, C.adivinarColumnas(tp.cabecera)).lista;
     E.fuentes = { cartola: 'ejemplo', ventas: 'ejemplo' }; guardar(); filtro = 'todo'; ir('cuadre'); aviso('Ejemplo cargado: una tienda que vende por Instagram y WhatsApp.');
   });
   $('exp-json').addEventListener('click', function () { descargar('cuadra-respaldo-' + new Date().toISOString().slice(0, 10) + '.json', JSON.stringify(E, null, 1), 'application/json'); });

@@ -49,3 +49,7 @@ th{background:#eef1ec}td.num,th.num{text-align:right;font-variant-numeric:tabula
 [hidden]{display:none!important}
 footer{margin:32px 0 0;padding:20px 0 40px;border-top:1px solid var(--borde);font-size:.88rem;color:var(--suave)}footer a{color:var(--tinta)}
 @media print{header .priv,.pasos,.acc,.filtros,footer,#msg,.caja:last-of-type{display:none}.caja{border:0}}
+.item.exp{border-left-color:#6b4fa0}.t-exp{color:#5b3f90}
+.regla{margin-top:10px;font-size:.9rem}.regla summary{cursor:pointer;font-weight:600;color:var(--acento);min-height:32px;padding:4px 0}
+input.corto,.regla select{width:auto;min-width:12em;flex:1 1 12em}
+tfoot th,tfoot td{font-weight:700;background:#f4f6f2}

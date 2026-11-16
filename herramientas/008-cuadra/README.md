@@ -17,21 +17,27 @@ Sube la cartola de tu banco y tu lista de pedidos o ventas, y ve qué cobros lle
 - 2 pedidos sin cobro ($54.490, con los días que llevan esperando).
 - 2 abonos sin respaldo ($52.990): un depósito en efectivo y una transferencia repetida, avisada como posible pago doble.
 - Un informe CSV que Excel abre bien (UTF-8, con punto y coma).
+- Un **informe mensual por canal**: Instagram vendió $99.460 y cobró $76.970; WhatsApp cobró el 59 %; la tienda web dejó $660 en comisiones y la plata tardó 1 día en llegar.
+- Con una regla («deposito efectivo» es aporte de socios), ese abono deja de aparecer como «sin respaldo».
+
+El mismo ejemplo viene como Excel real en [`ejemplos/cartola-ejemplo.xlsx`](ejemplos/cartola-ejemplo.xlsx): Cuadra lo lee y obtiene exactamente el mismo cuadre (lo comprueba `pruebas.mjs`).
 
 ## Qué tendencia resuelve
 - Ya existen productos de pago que cruzan los cargos del banco con los respaldos, como [Paidwhere](https://paidwhere.com/), que cuesta de USD 15 a USD 63 al mes y **no opera en países hispanos**. También aparecen nuevos esta misma semana ([TreasuryFlow en Hacker News](https://news.ycombinator.com/item?id=50476238)).
 - En el Cyber de octubre de 2026 en Chile, el número de compras subió 20 % y el monto promedio bajó 15 % ([CCS, vía El Desconcierto](https://eldesconcierto.cl/tendencias/cyber-monday-2026-ventas-online-subieron-25-y-pedidos-marcaron-record-chile-n5463381)). Son más cobros, y más chicos, que cuadrar.
 - Los cobros llegan por más canales: transferencias, enlaces de pago y Bizum, que ya acepta más de 1,6 millones de comercios en España ([Ara](https://es.ara.cat/economia/banca/bizum-acelera-despliegue-tiendas-restaurantes-1-6-millones-comercios-aceptan-pagos_1_5856363.html)).
 
-La investigación completa, con 22 fuentes, está en [INVESTIGACION.md](INVESTIGACION.md).
+- Los bancos entregan la cartola en Excel: Santander España descarga los movimientos «en Excel o PDF» ([ayuda del banco](https://www.bancosantander.es/faqs/particulares/operativa-banca-digital/como-consultar-descargar-movimientos-cuenta)). Por eso la fase 2 lee el Excel directamente.
+
+La investigación completa (22 fuentes de la fase 1 y 12 de la fase 2) está en [INVESTIGACION.md](INVESTIGACION.md).
 
 ## Cómo se usa
-1. En la web de tu banco, descarga la cartola o los movimientos en **CSV**.
-2. En Cuadra, paso 1: sube el archivo o pega su contenido. Revisa qué columna es la fecha, la glosa y los abonos; Cuadra lo adivina a partir de los títulos.
-3. Paso 2: sube tu lista de pedidos o ventas (la de tu tienda o tu planilla) con la fecha y el total. Si trae el número de pedido y el cliente, acierta mucho más.
-4. Paso 3: revisa el cuadre. **Confirma** o descarta los cruces dudosos y **une a mano** lo que Cuadra no pudo cruzar.
-5. Descarga el informe CSV para Excel o para tu contador, o imprímelo como PDF.
-6. Exporta un respaldo JSON si quieres seguir en otro equipo.
+1. En la web de tu banco, descarga la cartola o los movimientos en **Excel (.xlsx)** o **CSV**, tal como salen.
+2. En Cuadra, paso 1: sube el archivo o pega su contenido. Revisa qué columna es la fecha, la glosa y los abonos; Cuadra lo adivina a partir de los títulos. Al confirmar, **recuerda el formato de tu banco**: el mes siguiente las columnas se eligen solas.
+3. Paso 2: sube tu lista de pedidos o ventas (la de tu tienda o tu planilla) con la fecha y el total. Si trae el número de pedido, el cliente y el **canal** (Instagram, WhatsApp, web, enlace de pago), acierta más y el informe sale por canal.
+4. Paso 3: revisa el cuadre. **Confirma** o descarta los cruces dudosos y **une a mano** lo que Cuadra no pudo cruzar. A los abonos que no son ventas (aportes, préstamos, reembolsos, traspasos) crea una **regla** y quedan explicados este mes y los siguientes.
+5. Paso 4: mira el **informe mensual por canal** y descárgalo en CSV, o imprímelo como PDF.
+6. Exporta un respaldo JSON (incluye formatos y reglas) si quieres seguir en otro equipo o pasárselo a tu contador.
 
 ## Cómo decide
 1. **Monto exacto** dentro de una ventana de días (por defecto, 3 antes y 10 después del pedido). Gana el pedido cuyo número aparece en la glosa o cuyo cliente coincide con quien transfirió; si no, el más cercano en fecha.
@@ -49,19 +55,23 @@ A quien vende por WhatsApp, Instagram, su tienda en línea o un marketplace y co
 
 ## En qué se diferencia
 - Es gratis, en español, sin registro y sin subir la cartola a ningún servidor. Los datos bancarios son los más sensibles de una empresa.
+- Lee el Excel del banco **con un lector propio, sin librerías externas**: no depende de SheetJS, cuya última versión en cdnjs (0.18.5) tiene dos fallas de seguridad conocidas al abrir archivos ([CVE-2023-30533](https://osv.dev/vulnerability/GHSA-4r6h-8v6p-xvw6), [CVE-2024-22363](https://osv.dev/vulnerability/GHSA-5pgg-2g8v-p4x9)). También lee el «.xls» que en realidad es una página web, que entregan varios bancos.
 - Entiende los formatos hispanos: `1.234.567`, `1.234,56`, `02/11/2026`, CSV con punto y coma o guardados por Excel en Windows-1252, y líneas de título antes de la tabla.
 - Encuentra pagos que cubren varios pedidos y pagos con comisión descontada, y explica cada cruce.
 
 ## Fases
 - [x] **Fase 1 (13-11-2026):** carga de CSV con columnas detectadas, motor de conciliación (exactos, agrupados, comisiones, empates y duplicados), confirmación y unión manual, informe CSV, respaldo JSON, funcionamiento sin conexión y ejemplo precargado.
-- [ ] **Fase 2:** lectura directa de Excel (.xlsx), perfiles por banco guardados, reglas para movimientos que se repiten (por ejemplo, «este depósito es aporte de socio») e informe mensual por canal de cobro.
+- [x] **Fase 2 (16-11-2026):** lectura directa de Excel (.xlsx y «.xls» en HTML) con lector propio, formatos de banco y de tienda recordados por cabecera, reglas para abonos que no son ventas (aporte, préstamo, reembolso, traspaso…), columna de canal e informe mensual por canal con días promedio de cobro. Plataforma terminada.
 
 ## Limitaciones honestas
 - Solo cuadra **ingresos** contra ventas; los cargos se ignoran. Todavía no concilia gastos contra facturas de proveedores.
 - Un pedido pagado en efectivo, o en otra cuenta, aparecerá como «sin cobro».
 - Si la glosa del banco no trae el nombre de quien paga, los cruces dependen del monto y la fecha y habrá más «Revisar».
 - No reemplaza la contabilidad ni la emisión de boletas o facturas electrónicas.
-- Las pruebas usan cartolas de ejemplo; no se probó con el formato real de cada banco.
+- El Excel antiguo binario (.xls de 1997-2003) no se lee: hay que guardarlo como .xlsx o CSV. De un Excel con varias hojas se lee solo la primera.
+- Algunos bancos chilenos entregan la cartola en TXT de ancho fijo (según la ayuda de un ERP, [Defontana](https://intercom.help/defontanaerp/es/articles/3955851-importar-cartola-bancaria)); ese formato no se lee si no tiene separadores.
+- Las reglas buscan palabras completas en la glosa y solo se aplican a lo que no calzó con un pedido.
+- Las pruebas usan cartolas de ejemplo (una de ellas, un Excel real generado con una planilla); no se probó con el formato real de cada banco.
 
 ## Licencia
 MIT.

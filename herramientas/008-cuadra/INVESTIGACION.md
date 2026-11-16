@@ -91,3 +91,35 @@ Tiene la mayor utilidad y la mejor diferenciación. Tiene evidencia directa de q
 - Se trabaja con los CSV que exportan los bancos y las tiendas. El Excel (.xlsx) queda para la fase 2. Mientras tanto, la interfaz explica cómo guardar como CSV.
 - «Cobro» es todo abono (monto positivo) de la cartola. Los cargos se ignoran en el cuadre de ventas.
 - La tolerancia por comisión viene por defecto en 5 % y la ventana de fechas va desde 3 días antes hasta 10 días después del pedido. Las dos se pueden ajustar.
+
+
+---
+
+# Fase 2 · corrida de continuación (16-11-2026)
+Dos exploradores con WebSearch y WebFetch. Fecha de consulta de todas las fuentes: 16-11-2026. El orquestador comprobó de nuevo con `curl` la versión en cdnjs (`{"version":"0.18.5"}`) y que respondieran 200 las páginas de OSV, Quipu y Pauta.
+
+## Fuentes para la fase 2
+| Fuente | Fecha de la fuente | Qué aporta |
+|---|---|---|
+| [API de cdnjs, xlsx](https://api.cdnjs.com/libraries/xlsx) | consulta 16-11-2026 | La última versión de SheetJS en cdnjs es 0.18.5 (archivo de 2022). |
+| [OSV GHSA-4r6h-8v6p-xvw6 (CVE-2023-30533)](https://osv.dev/vulnerability/GHSA-4r6h-8v6p-xvw6) | 24-04-2023 | Contaminación de prototipos «al leer archivos especialmente preparados»; afecta a 0.18.5. |
+| [OSV GHSA-5pgg-2g8v-p4x9 (CVE-2024-22363)](https://osv.dev/vulnerability/GHSA-5pgg-2g8v-p4x9) | 05-04-2024 | ReDoS en versiones anteriores a 0.20.2; el paquete npm ya no se mantiene. |
+| [Banco Santander España, preguntas frecuentes](https://www.bancosantander.es/faqs/particulares/operativa-banca-digital/como-consultar-descargar-movimientos-cuenta) | sin fecha | Fuente oficial: los movimientos se descargan «en Excel o PDF». |
+| [Defontana, importar cartola bancaria](https://intercom.help/defontanaerp/es/articles/3955851-importar-cartola-bancaria) | 23-11-2022 | Tercero (ERP chileno): algunos bancos de Chile entregan TXT; los demás, Excel. |
+| [Defontana, importar cartola desde Excel](https://intercom.help/defontanaerp/es/articles/16101273-importar-cartola-desde-excel) | 27-07-2026 | La importación automática existe para un solo banco: cada banco exporta distinto; de ahí los formatos recordados por cabecera. |
+| [Quipu, conciliación bancaria](https://getquipu.com/blog/conciliacion-bancaria-como-realizarla/) | 24-08-2026 | Estimación de un proveedor (sin metodología): 2 a 4 horas al mes para un autónomo. No se usa como dato medido. |
+| [Foro HelpMyCash sobre extractos](https://www.helpmycash.com/foro/experiencias/303/como-sacar-descargar-imprimir-extracto-bancario-app-web-cajero-oficina/) | 2017-2022 | Testimonios: descargar extractos mes a mes es engorroso. |
+
+## Fuentes para ideas nuevas (a PROPUESTAS.md)
+| Fuente | Fecha de la fuente | Qué aporta |
+|---|---|---|
+| [CMS Albiñana & Suárez de Lezo](https://cms.law/en/esp/publication/factura-electronica-b2b-arranca-la-cuenta-atras-y-veri-factu-se-aplaza-a-2028) | 06-10-2026 | Factura electrónica B2B en España con plazos de 12 y 24 meses; el aplazamiento de Verifactu a 2028 solo está anunciado (sin verificar en el BOE). |
+| [Pauta, postergación de la Ley 21.719](https://www.pauta.cl/actualidad/2026/10/29/senado-aprueba-prorroga-de-ley-de-datos-personales-entrada-en-vigencia-se-posterga-hasta-octubre-de-2027.html) | 29-10-2026 | El Senado aprobó postergarla al 15-10-2027; falta la Cámara (sin verificar en fuente oficial). |
+| [Pinggy, LLM en el navegador con WebGPU](https://pinggy.io/blog/run_llm_in_browser_webgpu/) | 20-09-2026 | Soporte de WebGPU en los navegadores principales; un modelo de 1B pesa unos 695 MB (cifras del autor). |
+| [El Cronista, Business AI en WhatsApp](https://www.cronista.com/infotechnology/it-business/asi-funciona-la-novedad-de-whatsapp-que-usan-las-pymes-para-vender-mas-sin-sumar-personal/) | 18-05-2026 | Agentes de IA de Meta en WhatsApp Business en Latinoamérica; sus cifras no tienen fuente y no se usan. |
+
+## Decisión que cambia el plan
+El plan decía «SheetJS por CDN con versión fija». Se reemplaza por **un lector de .xlsx propio** (`xlsx.js`): la única versión disponible en los CDN permitidos tiene dos fallas conocidas justo al leer archivos, y la corregida solo se publica en el CDN de SheetJS, que está fuera de la lista permitida. El lector propio usa `DecompressionStream` del navegador, no agrega dependencias, funciona sin conexión y se prueba en Node con un Excel real.
+
+## Compuerta de profundidad
+12 fuentes abiertas en esta corrida (8 para la fase y 4 para ideas), todas con fecha de consulta; el mínimo para una continuación es 4. Corrida de continuación: sin jurado completo.
