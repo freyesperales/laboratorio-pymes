@@ -126,4 +126,193 @@ t('respaldo: valida y rechaza', () => {
   assert.ok(T.validarEstado(Object.assign({}, e, { inicio: '2026-13-01' })).length > 0);
 });
 
+// ---------- Fase 2: lo trabajado ----------
+const mini = (perfil = 'cl42') => {
+  const e = T.estadoVacio('2026-11-16'); e.perfil = perfil;
+  e.turnos = [{ id: 't8', nombre: 'Día', inicio: '09:00', fin: '18:00', colacion: 60 }];
+  e.equipo = [{ id: 'a', nombre: 'Ana', rol: 'Caja', horasContrato: 40 }];
+  e.grilla = { a: ['t8', 't8', 't8', 't8', 't8', null, null] };
+  return e;
+};
+const cods = (inf, nivel) => inf.alertas.filter(a => !nivel || a.nivel === nivel).map(a => a.codigo);
+const BOM = String.fromCharCode(0xFEFF), CRLF = String.fromCharCode(13, 10);
+
+t('días entre fechas y día del ciclo, hacia adelante y hacia atrás', () => {
+  assert.equal(T.diasEntre('2026-11-16', '2026-12-01'), 15); assert.equal(T.diasEntre('2026-11-16', '2026-11-09'), -7);
+  const e = T.ejemplo('2026-11-18'); // ciclo de 14 días desde el 16-11
+  assert.equal(T.diaDelCiclo(e, '2026-11-16'), 0); assert.equal(T.diaDelCiclo(e, '2026-11-30'), 0);
+  assert.equal(T.diaDelCiclo(e, '2026-11-09'), 7); assert.equal(T.diaDelCiclo(e, '2026-11-15'), 13);
+});
+t('plan de una fecha cualquiera', () => {
+  const e = mini();
+  assert.equal(T.planDe(e, 'a', '2026-12-02').inicio, '09:00'); // miércoles
+  assert.equal(T.planDe(e, 'a', '2026-12-05'), null); // sábado
+  assert.equal(T.planDe(e, 'a', '2026-10-05').nombre, 'Día'); // lunes anterior al inicio
+});
+t('marcar valida la jornada', () => {
+  const e = mini();
+  assert.deepEqual(T.marcar(e, 'a', '2026-11-16', { inicio: '09:00', fin: '18:30', colacion: 60 }), []);
+  assert.ok(T.marcar(e, 'zz', '2026-11-16', { inicio: '09:00', fin: '18:00' }).length);
+  assert.ok(T.marcar(e, 'a', '2026-02-30', { inicio: '09:00', fin: '18:00' }).length);
+  assert.ok(T.marcar(e, 'a', '2026-11-17', { inicio: '9', fin: '18:00' }).length);
+  assert.ok(T.marcar(e, 'a', '2026-11-17', { inicio: '09:00', fin: '10:00', colacion: 60 }).some(m => /colación/.test(m)));
+  assert.ok(T.marcar(e, 'a', '2026-11-17', { inicio: '06:00', fin: '23:30', colacion: 0 }).some(m => /16 horas/.test(m)));
+  assert.equal(T.registro(e, 'a', '2026-11-17'), null);
+});
+t('estados de un día: plan contra real', () => {
+  const e = mini(), est = f => T.diaReal(e, 'a', f).estado;
+  assert.equal(est('2026-11-16'), 'sin-registro'); assert.equal(est('2026-11-21'), 'libre');
+  T.marcar(e, 'a', '2026-11-16', { inicio: '09:00', fin: '18:00', colacion: 60 }); assert.equal(est('2026-11-16'), 'segun-plan');
+  T.marcar(e, 'a', '2026-11-17', { inicio: '09:00', fin: '19:30', colacion: 60 }); assert.equal(est('2026-11-17'), 'mas'); assert.equal(T.diaReal(e, 'a', '2026-11-17').dif, 90);
+  T.marcar(e, 'a', '2026-11-18', { inicio: '10:00', fin: '18:00', colacion: 60 }); assert.equal(est('2026-11-18'), 'menos'); assert.equal(T.diaReal(e, 'a', '2026-11-18').dif, -60);
+  T.marcar(e, 'a', '2026-11-19', { ausente: true, nota: 'Permiso' }); assert.equal(est('2026-11-19'), 'ausente'); assert.equal(T.diaReal(e, 'a', '2026-11-19').dif, -480);
+  T.marcar(e, 'a', '2026-11-21', { inicio: '10:00', fin: '14:00', colacion: 0 }); assert.equal(est('2026-11-21'), 'libre-trabajado'); assert.equal(T.diaReal(e, 'a', '2026-11-21').realMin, 240);
+  T.quitarMarca(e, 'a', '2026-11-16'); assert.equal(est('2026-11-16'), 'sin-registro');
+});
+t('jornada real que cruza la medianoche', () => {
+  const e = mini(); T.marcar(e, 'a', '2026-11-16', { inicio: '22:00', fin: '06:00', colacion: 30 });
+  assert.equal(T.diaReal(e, 'a', '2026-11-16').realMin, 450);
+});
+t('cambiar la grilla después no reescribe lo ya registrado', () => {
+  const e = mini(); T.marcar(e, 'a', '2026-11-16', { inicio: '09:00', fin: '18:00', colacion: 60 });
+  T.asignar(e, 'a', 0, null); // el lunes pasa a ser libre en la grilla
+  assert.equal(T.diaReal(e, 'a', '2026-11-16').estado, 'segun-plan'); assert.equal(T.diaReal(e, 'a', '2026-11-23').estado, 'libre');
+  T.marcar(e, 'a', '2026-11-16', { inicio: '09:00', fin: '19:00', colacion: 60 }); // corregir el registro conserva el plan original
+  assert.equal(T.diaReal(e, 'a', '2026-11-16').dif, 60);
+});
+t('tolerancia: pocos minutos no cuentan', () => {
+  const e = mini(); T.marcar(e, 'a', '2026-11-16', { inicio: '08:57', fin: '18:02', colacion: 60 });
+  assert.equal(T.diaReal(e, 'a', '2026-11-16').dif, 5); e.tolerancia = 5;
+  assert.equal(T.diaReal(e, 'a', '2026-11-16').dif, 0); assert.equal(T.diaReal(e, 'a', '2026-11-16').estado, 'segun-plan');
+});
+t('precargar según lo planificado no pisa registros', () => {
+  const e = mini(); T.marcar(e, 'a', '2026-11-17', { inicio: '09:00', fin: '20:00', colacion: 60 });
+  assert.equal(T.precargar(e, '2026-11-16', '2026-11-22'), 4);
+  assert.equal(T.registro(e, 'a', '2026-11-17').fin, '20:00'); assert.equal(T.registro(e, 'a', '2026-11-21'), null);
+  assert.equal(T.precargar(e, '2026-11-16', '2026-11-22'), 0);
+});
+t('Chile: las horas extra se calculan por semana y los atrasos se compensan', () => {
+  const e = mini(), p = e.equipo[0];
+  assert.equal(T.metodoExtra(e), 'semanal');
+  T.marcar(e, 'a', '2026-11-16', { inicio: '09:00', fin: '20:00', colacion: 60 }); // +2 h
+  T.marcar(e, 'a', '2026-11-17', { inicio: '11:00', fin: '18:00', colacion: 60 }); // -2 h
+  T.precargar(e, '2026-11-16', '2026-11-22');
+  let s = T.semanaReal(e, p, '2026-11-16'); assert.equal(s.real, 2400); assert.equal(s.base, 2400); assert.equal(s.extra, 0);
+  T.marcar(e, 'a', '2026-11-18', { inicio: '09:00', fin: '19:00', colacion: 60 }); // +1 h
+  s = T.semanaReal(e, p, '2026-11-16'); assert.equal(s.extra, 60);
+  assert.equal(T.extrasEntre(e, p, '2026-11-01', '2026-11-30'), 60);
+});
+t('base de la semana: contrato, perfil o lo planificado en un ciclo', () => {
+  const e = mini(), p = e.equipo[0];
+  p.horasContrato = ''; assert.equal(T.semanaReal(e, p, '2026-11-16').base, 42 * 60);
+  p.horasContrato = 30; assert.equal(T.semanaReal(e, p, '2026-11-16').base, 30 * 60);
+  const c = T.ejemplo('2026-11-18'), diego = c.equipo[3];
+  assert.equal(T.semanaReal(c, diego, '2026-11-09').base, 46 * 60); // ciclo de 2 semanas: manda lo planificado
+});
+t('informe del ejemplo: extra por día sobre el tope, día libre trabajado y totales', () => {
+  const e = T.ejemplo('2026-11-20'), inf = T.informeMes(e, '2026-11', '2026-11-20');
+  assert.equal(inf.metodo, 'semanal'); assert.equal(inf.extraMes, 445); // Benjamín 0:40 + Carla 4:00 + Diego 2:45
+  assert.ok(inf.alertas.some(a => a.codigo === 'extra-diaria' && a.nombre === 'Diego' && a.fecha === '2026-11-09'));
+  assert.ok(inf.alertas.some(a => a.codigo === 'libre-trabajado' && a.nombre === 'Carla'));
+  assert.ok(!cods(inf).includes('pacto'));
+  const ana = inf.personas[0]; assert.equal(ana.trabajados, 5); assert.equal(ana.dif, -60); assert.equal(ana.extraMes, 0);
+  const elena = inf.personas[4]; assert.equal(elena.ausencias, 1); assert.equal(elena.trabajados, 3);
+});
+t('la semana que cruza de mes se cuenta en el mes en que termina', () => {
+  const e = mini(); e.pactoExtrasHasta = '2026-12-31';
+  T.marcar(e, 'a', '2026-11-30', { inicio: '09:00', fin: '20:00', colacion: 60 }); // lunes, +2 h
+  T.precargar(e, '2026-11-30', '2026-12-06');
+  assert.equal(T.informeMes(e, '2026-11').personas[0].extraMes, 0);
+  assert.equal(T.informeMes(e, '2026-12').personas[0].extraMes, 120);
+});
+t('pendientes: solo desde el primer registro y hasta hoy', () => {
+  const e = mini(); T.marcar(e, 'a', '2026-11-18', { inicio: '09:00', fin: '18:00', colacion: 60 });
+  const inf = T.informeMes(e, '2026-11', '2026-11-20');
+  assert.equal(inf.personas[0].sinRegistro, 2); assert.equal(inf.personas[0].planMin, 480); assert.ok(cods(inf, 'info').includes('sin-registro'));
+  assert.equal(T.informeMes(mini(), '2026-11', '2026-11-20').sinRegistro, 0);
+});
+t('Chile: topes de 2 horas extra por día, 12 por semana y pacto escrito', () => {
+  const e = mini();
+  T.marcar(e, 'a', '2026-11-16', { inicio: '09:00', fin: '23:00', colacion: 60 }); // 13 h
+  T.precargar(e, '2026-11-16', '2026-11-22');
+  let inf = T.informeMes(e, '2026-11');
+  assert.ok(cods(inf, 'error').includes('extra-diaria')); assert.ok(cods(inf, 'error').includes('diario-real')); assert.ok(cods(inf, 'aviso').includes('pacto'));
+  e.pactoExtrasHasta = '2026-11-10'; assert.ok(cods(T.informeMes(e, '2026-11')).includes('pacto')); // vencido
+  e.pactoExtrasHasta = '2026-12-31'; assert.ok(!cods(T.informeMes(e, '2026-11')).includes('pacto'));
+  const s = mini(); s.pactoExtrasHasta = '2026-12-31'; s.ajustes = { maxExtraDiaria: 4 };
+  ['16', '17', '18', '19', '20'].forEach(d => T.marcar(s, 'a', '2026-11-' + d, { inicio: '09:00', fin: '21:00', colacion: 60 })); // +3 h diarias = 15 h
+  inf = T.informeMes(s, '2026-11');
+  assert.ok(cods(inf, 'error').includes('extra-semanal')); assert.ok(!cods(inf).includes('extra-diaria'));
+  s.ajustes.maxExtraSemanal = null; assert.ok(!cods(T.informeMes(s, '2026-11')).includes('extra-semanal'));
+});
+t('España: por día, 80 horas al año y compensadas con descanso', () => {
+  const e = mini('es40'), p = e.equipo[0]; e.inicio = '2026-01-05';
+  assert.equal(T.metodoExtra(e), 'diario');
+  let n = 0;
+  for (let f = '2026-01-05'; n < 41; f = T.sumarDias(f, 1)) if (T.diaSemana(f) < 5) { T.marcar(e, 'a', f, { inicio: '09:00', fin: '20:00', colacion: 60 }); n++; }
+  assert.equal(T.extrasEntre(e, p, '2026-01-01', '2026-12-31'), 82 * 60);
+  let inf = T.informeMes(e, '2026-03');
+  assert.equal(inf.personas[0].extraAnio, 82 * 60); assert.ok(inf.alertas.some(a => a.codigo === 'extra-anual' && a.nivel === 'error'));
+  assert.ok(!cods(inf).includes('pacto')); assert.ok(!cods(inf).includes('extra-diaria'));
+  e.comp = { a: { '2026-02': 180 } };
+  inf = T.informeMes(e, '2026-03');
+  assert.equal(inf.personas[0].extraAnio, 79 * 60); assert.ok(inf.alertas.some(a => a.codigo === 'extra-anual' && a.nivel === 'aviso'));
+  assert.equal(T.informeMes(e, '2026-02').personas[0].compensadas, 180);
+});
+t('España: descanso real entre jornadas y tiempo parcial', () => {
+  const e = mini('es40');
+  T.marcar(e, 'a', '2026-11-16', { inicio: '14:00', fin: '23:00', colacion: 60 });
+  T.marcar(e, 'a', '2026-11-17', { inicio: '08:00', fin: '17:00', colacion: 60 });
+  let inf = T.informeMes(e, '2026-11');
+  assert.ok(inf.alertas.some(a => a.codigo === 'entre-jornadas-real' && a.fecha === '2026-11-17')); assert.ok(!cods(inf).includes('parcial-extra'));
+  e.equipo[0].horasContrato = 20; T.marcar(e, 'a', '2026-11-19', { inicio: '09:00', fin: '19:00', colacion: 60 });
+  assert.ok(cods(T.informeMes(e, '2026-11'), 'aviso').includes('parcial-extra'));
+});
+t('registros que se pisan', () => {
+  const e = mini();
+  T.marcar(e, 'a', '2026-11-16', { inicio: '20:00', fin: '08:00', colacion: 0 }); T.marcar(e, 'a', '2026-11-17', { inicio: '07:00', fin: '15:00', colacion: 0 });
+  assert.ok(cods(T.informeMes(e, '2026-11'), 'error').includes('solape-real'));
+});
+t('CSV del informe y del detalle', () => {
+  const e = T.ejemplo('2026-11-20');
+  const r = T.informeMesCSV(e, '2026-11', '2026-11-20'), l = r.split(CRLF);
+  assert.ok(r.startsWith(BOM + 'Persona;Cargo;Mes;')); assert.equal(l.length, 8); assert.ok(/sobre la jornada de cada semana/.test(l[0]));
+  assert.ok(l[4].startsWith('Diego;Cocina;2026-11;5;0;')); assert.ok(l[4].includes(';46;48,75;2,75;2,75;'));
+  const d = T.detalleMesCSV(e, '2026-11'), dl = d.split(CRLF);
+  assert.ok(dl.some(x => x.startsWith('Diego;Cocina;2026-11-09;lunes;Apertura;07:30;16:00;07:30;18:45;30;8;10,75;2,75;Más de lo planificado;Inventario')));
+  assert.ok(dl.some(x => /Elena;Caja;2026-11-11;.*;No vino;Permiso/.test(x))); assert.ok(dl.some(x => /Carla;.*2026-11-09;lunes;Libre;;;10:00;14:00;0;0;4;4;Trabajó en día libre/.test(x)));
+  const solo = T.detalleMesCSV(e, '2026-11', 'p1').split(CRLF).slice(1).filter(Boolean); assert.ok(solo.length && solo.every(x => x.startsWith('Ana;')));
+});
+t('importar marcas desde CSV, con y sin cabecera', () => {
+  const e = T.ejemplo('2026-11-20');
+  const a = T.leerMarcasCSV(e, ['Fecha;Trabajador;Entrada;Salida;Colación;Observación', '20-11-2026;benjamin;12:35:10;21:05;30;"Cierre; con evento"', '2026-11-20;Pedro;09:00;18:00;60', '31/02/2026;Ana;09:00;18:00;60', '20/11/2026;ANA;7:30;16:00;30', '2026-11-20;Carla;16:00;x;0'].join(CRLF));
+  assert.equal(a.marcas.length, 2); assert.equal(a.errores.length, 3);
+  assert.equal(a.marcas[0].pid, 'p2'); assert.equal(a.marcas[0].fecha, '2026-11-20'); assert.equal(a.marcas[0].marca.inicio, '12:35'); assert.equal(a.marcas[0].marca.nota, 'Cierre; con evento');
+  assert.equal(a.marcas[1].marca.inicio, '07:30'); assert.ok(/Pedro/.test(a.errores[0])); assert.ok(/fecha/.test(a.errores[1]));
+  assert.equal(T.aplicarMarcas(e, a.marcas), 2); assert.equal(T.registro(e, 'p2', '2026-11-20').fin, '21:05');
+  const b = T.leerMarcasCSV(e, '2026-11-21,Felipe,10:00,15:00'); assert.equal(b.marcas.length, 1); assert.equal(b.marcas[0].marca.colacion, 0);
+  assert.ok(T.leerMarcasCSV(e, ['fecha;entrada;salida', '2026-11-21;10:00;15:00'].join(CRLF)).errores[0].includes('cabecera')); assert.ok(T.leerMarcasCSV(e, '').errores.length);
+});
+t('respaldos: los de la fase 1 se completan y los registros dañados se descartan', () => {
+  const v1 = T.ejemplo('2026-11-18'); delete v1.real; delete v1.comp; delete v1.pactoExtrasHasta; delete v1.tolerancia; delete v1.metodoExtra;
+  assert.deepEqual(T.validarEstado(v1), []); const n = T.normalizar(v1);
+  assert.deepEqual(n.real, {}); assert.deepEqual(n.comp, {}); assert.equal(n.tolerancia, 0); assert.equal(T.informeMes(n, '2026-11').extraMes, 0);
+  const e = T.ejemplo('2026-11-18'); e.real.fantasma = { '2026-11-10': { inicio: '09:00', fin: '18:00' } }; e.real.p1['2026-99-99'] = { inicio: '09:00', fin: '18:00' }; e.real.p1['2026-11-12'] = { inicio: 'x' }; e.tolerancia = 999;
+  T.normalizar(e); assert.equal(e.real.fantasma, undefined); assert.equal(e.real.p1['2026-99-99'], undefined); assert.equal(e.real.p1['2026-11-12'], undefined); assert.ok(e.real.p1['2026-11-09']); assert.equal(e.tolerancia, 30);
+  assert.ok(T.validarEstado(Object.assign({}, e, { real: [] })).length);
+  const ida = JSON.parse(JSON.stringify(e)); assert.deepEqual(T.validarEstado(ida), []); assert.equal(T.informeMes(T.normalizar(ida), '2026-11').extraMes, T.informeMes(e, '2026-11').extraMes);
+});
+t('quitar a una persona borra también sus jornadas', () => {
+  const e = T.ejemplo('2026-11-18'); e.comp = { p4: { '2026-11': 60 } }; T.quitarPersona(e, 'p4');
+  assert.equal(e.real.p4, undefined); assert.equal(e.comp.p4, undefined); assert.equal(T.informeMes(e, '2026-11').personas.length, 5);
+});
+t('meses: fin de mes, suma y nombre', () => {
+  assert.equal(T.finDeMes('2028-02'), '2028-02-29'); assert.equal(T.sumarMes('2026-12', 1), '2027-01'); assert.equal(T.sumarMes('2026-01', -1), '2025-12');
+  assert.equal(T.nombreMes('2026-11'), 'noviembre de 2026'); assert.ok(T.esMes('2026-11')); assert.ok(!T.esMes('2026-13'));
+});
+t('los ajustes no pueden cambiar el nombre ni el país del perfil', () => {
+  const e = mini(); e.ajustes = { nombre: 5, pais: 3, maxExtraAnual: 100 };
+  const r = T.reglas(e); assert.equal(r.pais, 'CL'); assert.ok(/Chile/.test(r.nombre)); assert.equal(r.maxExtraAnual, 100);
+});
+
 console.log(`\n${n} pruebas pasaron`);

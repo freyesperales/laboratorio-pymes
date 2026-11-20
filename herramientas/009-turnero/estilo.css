@@ -76,3 +76,19 @@ tfoot th,tfoot td{font-weight:700;background:#f4f6f2}
 .cob{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}.cob input{text-align:center;padding:6px}
 .nota{font-size:.85rem;color:var(--suave);background:#f1f4fb;border-radius:8px;padding:8px 10px;margin-top:8px}
 @media print{.grilla td select{border:0;appearance:none;-webkit-appearance:none;background:none}.estado{display:none}}
+.fila-ed.r{align-items:start}
+@media(min-width:700px){.fila-ed.r{grid-template-columns:2fr 1fr 1fr .9fr 1.6fr}}
+.fila-ed.r .bts{grid-column:1/-1;margin-top:0}
+.quien small{display:block}.res{margin-top:4px;min-height:1.7em}
+.navdia{display:flex;gap:8px;align-items:end;flex-wrap:wrap;margin-top:10px}.navdia>div{flex:1 1 9em;max-width:14em}
+.tira{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:10px}
+.tira button{font:inherit;font-size:.78rem;cursor:pointer;border:1px solid var(--borde);background:#fff;color:var(--tinta);border-radius:8px;padding:6px 2px;min-height:52px;line-height:1.25}
+.tira button[aria-pressed=true]{outline:3px solid var(--acento);outline-offset:-3px;font-weight:700}
+.tira .listo{background:#e8f5ec;border-color:#9ccfae}.tira .parcial{background:#fff6e0;border-color:#e2c26a}.tira .falta{background:#fdecea;border-color:#e3a09b}
+.tira small{display:block;color:var(--suave);font-weight:400;font-size:.7rem}
+.navmes{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px}.navmes b{font-size:1.05rem;min-width:10em;text-align:center}
+.b[disabled]{opacity:.45;cursor:not-allowed}
+input.comp{width:5.5em;min-height:36px;padding:4px 8px;text-align:right}
+code{font-size:.85em;background:#eef1ec;padding:1px 5px;border-radius:4px}
+.firmas,.soloimp{display:none}
+@media print{.noimp,.navdia,.tira,.navmes .b,.estado{display:none!important}.soloimp{display:block}.firmas{display:flex;gap:40px;margin-top:70px}.firmas span{flex:1;border-top:1px solid #000;padding-top:6px;text-align:center;font-size:.85rem}details.det>summary{list-style:none;color:#000}input.comp{border:0}.tabla{overflow:visible}table{font-size:.72rem}th,td{white-space:normal}}

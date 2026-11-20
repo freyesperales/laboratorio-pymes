@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Turnero · turnos que cumplen la jornada</title>
-<meta name="description" content="Plataforma gratuita para armar los turnos de tu equipo: te avisa al instante si alguien pasa de 42 horas, de 10 horas en un día o se queda sin descanso, con reglas de Chile (42 y 40 horas) y de España. Comparte el horario por WhatsApp o calendario. Sin registro; tus datos no salen del navegador.">
+<meta name="description" content="Plataforma gratuita para armar los turnos de tu equipo: te avisa al instante si alguien pasa de 42 horas, de 10 horas en un día o se queda sin descanso, con reglas de Chile (42 y 40 horas) y de España. Comparte el horario por WhatsApp o calendario, anota lo que de verdad se trabajó y obtén las horas extra del mes por persona. Sin registro; tus datos no salen del navegador.">
 <meta name="theme-color" content="#1e40af">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="stylesheet" href="estilo.css">
@@ -14,7 +14,7 @@
 <div class="cont">
 <header>
   <h1>Turnero</h1>
-  <p>Arma los turnos de tu equipo en una grilla. Turnero te avisa <b>al instante</b> si alguien pasa de 42 horas, de 10 horas en un día o se queda sin descanso, y te deja el horario listo para WhatsApp, calendario o para imprimir.</p>
+  <p>Arma los turnos de tu equipo en una grilla. Turnero te avisa <b>al instante</b> si alguien pasa de 42 horas, de 10 horas en un día o se queda sin descanso, y te deja el horario listo para WhatsApp, calendario o para imprimir. Al cierre del día anotas lo que pasó de verdad y, a fin de mes, tienes las <b>horas extra de cada persona</b>.</p>
   <span class="priv">🔒 Tus datos no salen de tu navegador: los nombres de tu equipo se guardan solo en este equipo</span>
 </header>
 
@@ -28,13 +28,15 @@
 <section id="v-grilla" class="caja" role="tabpanel" aria-labelledby="t-grilla" hidden></section>
 <section id="v-revision" class="caja" role="tabpanel" aria-labelledby="t-revision" hidden></section>
 <section id="v-compartir" class="caja" role="tabpanel" aria-labelledby="t-compartir" hidden></section>
+<section id="v-real" class="caja" role="tabpanel" aria-labelledby="t-real" hidden></section>
+<section id="v-informe" class="caja" role="tabpanel" aria-labelledby="t-informe" hidden></section>
 </main>
 
 <div id="msg" role="status" aria-live="polite"></div>
 
 <section class="caja">
   <h2>Tus datos: respaldo y traslado</h2>
-  <p class="sub">Todo vive en este navegador. Descarga un respaldo para seguir en otro equipo o para pasárselo a quien arma los turnos.</p>
+  <p class="sub">Todo vive en este navegador, también las jornadas registradas. Descarga un respaldo para seguir en otro equipo o para pasárselo a quien arma los turnos.</p>
   <div class="acc">
     <button class="b prim" id="ejemplo" type="button">Probar con un ejemplo</button>
     <button class="b" id="exp-json" type="button">Exportar respaldo (JSON)</button>

@@ -114,16 +114,23 @@
    "fecha": "2026-11-18",
    "nombre": "Turnero",
    "slug": "009-turnero",
-   "gancho": "Arma los turnos de tu equipo en una grilla y te avisa al instante si alguien pasa de 42 horas, de 10 horas en un día o se queda sin descanso; comparte el horario por WhatsApp o calendario.",
+   "gancho": "Arma los turnos de tu equipo en una grilla y te avisa al instante si alguien pasa de 42 horas, de 10 horas en un día o se queda sin descanso; anota lo que de verdad se trabajó y obtén las horas extra del mes por persona.",
    "categoria": "Personas y turnos",
    "tipo": "nueva",
-   "fases": "1/2",
+   "fases": "2/2",
    "demo_url": "https://freyesperales.github.io/laboratorio-pymes/herramientas/009-turnero/",
    "repo_url": "https://github.com/freyesperales/laboratorio-pymes/tree/main/herramientas/009-turnero",
-   "estado": "en-fases",
+   "estado": "publicada",
    "enlaces_investigacion": 29,
    "minutos": 13,
-   "nota": "4 exploradores en paralelo; reglas de jornada verificadas por el orquestador en Mintrab, Dictamen 253/21 de la DT y el BOE (art. 22 bis y 31 leídos en iura.cl). 47 pruebas pasan. Demo probada en Edge sin interfaz con servidor local: las 6 vistas sin errores de consola, alertas recalculadas al cambiar turnos y cambio de perfil a España; capturas de escritorio revisadas, sin desborde horizontal a 504 px (ancho mínimo de Edge sin interfaz)."
+   "nota": "4 exploradores en paralelo; reglas de jornada verificadas por el orquestador en Mintrab, Dictamen 253/21 de la DT y el BOE (art. 22 bis y 31 leídos en iura.cl). 47 pruebas pasan. Demo probada en Edge sin interfaz con servidor local: las 6 vistas sin errores de consola, alertas recalculadas al cambiar turnos y cambio de perfil a España; capturas de escritorio revisadas, sin desborde horizontal a 504 px (ancho mínimo de Edge sin interfaz).",
+   "fase2": {
+    "fecha": "2026-11-20",
+    "enlaces": 16,
+    "pruebas": 70,
+    "minutos": 14,
+    "nota": "Continuación con 2 exploradores; el orquestador abrió las dos páginas de la Dirección del Trabajo que sostienen el cálculo semanal y el tope de 12 horas. Cambio de plan: en Chile las horas extra se calculan por semana, no por día. Vistas nuevas «Lo trabajado» e «Informe del mes», importación de marcas por CSV, horas compensadas e informe imprimible. 70 pruebas pasan. El servidor de vista previa no se pudo iniciar en la corrida desatendida: la interfaz se probó con Edge sin ventana sobre una copia local (flujo completo, sin errores de consola, capturas a 500 y 1200 px). Compuerta de profundidad: pasa."
+   }
   }
  ]
 }

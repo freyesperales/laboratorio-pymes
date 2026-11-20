@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   var T = window.Turnero, CLAVE = 'turnero-v1';
-  var VISTAS = [['negocio', 'Negocio y reglas'], ['equipo', 'Equipo'], ['turnos', 'Turnos'], ['grilla', 'Grilla'], ['revision', 'Revisión'], ['compartir', 'Compartir']];
+  var VISTAS = [['negocio', 'Negocio y reglas'], ['equipo', 'Equipo'], ['turnos', 'Turnos'], ['grilla', 'Grilla'], ['revision', 'Revisión'], ['compartir', 'Compartir'], ['real', 'Lo trabajado'], ['informe', 'Informe del mes']];
   var COLORES = ['#0f766e', '#7c3aed', '#b45309', '#b91c1c', '#1d4ed8', '#be185d', '#4d7c0f', '#475569'];
   var DIARIAS = ['diario', 'pausa', 'entre-jornadas', 'solape'];
   var est, vista = 'negocio', semana = 0, semanaComp = 0;
@@ -11,7 +11,7 @@
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
   function hoy() { var d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
   function cargar() {
-    try { var o = JSON.parse(localStorage.getItem(CLAVE)); if (o && !T.validarEstado(o).length) return o; } catch (e) { /* sin almacenamiento */ }
+    try { var o = JSON.parse(localStorage.getItem(CLAVE)); if (o && !T.validarEstado(o).length) return T.normalizar(o); } catch (e) { /* sin almacenamiento */ }
     return T.estadoVacio(hoy());
   }
   function guardar() { try { localStorage.setItem(CLAVE, JSON.stringify(est)); } catch (e) { aviso('No se pudo guardar en este navegador (modo privado o sin espacio). Exporta un respaldo.', true); } }
@@ -52,14 +52,15 @@
   $('#estado').addEventListener('click', function (e) { var b = e.target.closest('[data-ir]'); if (b) ir(b.dataset.ir); });
 
   function pintar() {
-    ({ negocio: pNegocio, equipo: pEquipo, turnos: pTurnos, grilla: pGrilla, revision: pRevision, compartir: pCompartir })[vista]();
+    ({ negocio: pNegocio, equipo: pEquipo, turnos: pTurnos, grilla: pGrilla, revision: pRevision, compartir: pCompartir, real: pReal, informe: pInforme })[vista]();
     pintarEstado();
   }
 
   // ---------- 1. Negocio y reglas ----------
   var CAMPOS = [['promedioSemanal', 'Horas semanales (promedio)'], ['maxDiario', 'Máximo de horas en un día'], ['topeSemanaCiclo', 'Tope de una semana dentro del ciclo'],
     ['maxSemanasSeguidasSobrePromedio', 'Semanas seguidas en el tope'], ['minDias', 'Mínimo de días de trabajo por semana'], ['maxDias', 'Máximo de días de trabajo por semana'],
-    ['descansoEntreJornadas', 'Descanso mínimo entre jornadas (h)'], ['descansoSemanalHoras', 'Descanso semanal continuo (h)'], ['pausaSiMasDe', 'Pausa obligatoria si el turno pasa de (h)'], ['pausaMin', 'Duración mínima de esa pausa (min)']];
+    ['descansoEntreJornadas', 'Descanso mínimo entre jornadas (h)'], ['descansoSemanalHoras', 'Descanso semanal continuo (h)'], ['pausaSiMasDe', 'Pausa obligatoria si el turno pasa de (h)'], ['pausaMin', 'Duración mínima de esa pausa (min)'],
+    ['maxExtraDiaria', 'Máximo de horas extra por día'], ['maxExtraSemanal', 'Máximo de horas extra por semana'], ['maxExtraAnual', 'Máximo de horas extra por año']];
   function pNegocio() {
     var r = T.reglas(est), base = T.PERFILES[est.perfil];
     var h = '<h2>Tu negocio y las reglas que aplican</h2><p class="sub">Elige tu país y tu ciclo. Las reglas vienen de la ley general y puedes ajustarlas si tu convenio o pacto dice otra cosa.</p>';
@@ -138,7 +139,7 @@
       var i = $('#pn-' + p.id); if (i) { i.focus(); i.select(); }
     } else if (t.dataset.del) {
       var q = est.equipo.find(function (x) { return x.id === t.dataset.del; });
-      if (confirm('¿Quitar a ' + q.nombre + ' y sus turnos?')) { T.quitarPersona(est, q.id); cambio(); pEquipo(); }
+      if (confirm('¿Quitar a ' + q.nombre + ', sus turnos y sus jornadas registradas?')) { T.quitarPersona(est, q.id); cambio(); pEquipo(); }
     } else if (t.id === 'importar-p') {
       var r = T.leerEquipoCSV($('#pegar').value);
       if (!r.equipo.length) { aviso('No encontré nombres. Usa una línea por persona: nombre;cargo;horas', true); return; }
@@ -296,11 +297,190 @@
     else if (t.id === 'imprimir') { ir('grilla'); setTimeout(function () { window.print(); }, 50); }
   });
 
+  // ---------- 7. Lo trabajado ----------
+  var diaR = null;
+  function textoPlan(pl) { return pl ? esc(pl.nombre) + ' ' + pl.inicio + '–' + pl.fin + ' · ' + T.fmtH(T.duracionTurno(pl).efectivo) : 'Libre'; }
+  function chipDia(x) {
+    if (x.estado === 'sin-registro') return '<span class="tag t-info">Sin registrar</span>';
+    if (x.estado === 'libre') return '<span class="sub">Día libre</span>';
+    if (x.estado === 'ausente') return '<span class="tag t-error">No vino</span>';
+    if (x.estado === 'segun-plan') return '<span class="tag t-alta">✓ ' + T.fmtH(x.realMin) + '</span> <span class="sub">según lo planificado</span>';
+    if (x.estado === 'mas') return '<span class="tag t-aviso">' + T.fmtH(x.realMin) + '</span> <span class="sub">' + T.fmtH(x.dif) + ' más de lo planificado</span>';
+    if (x.estado === 'menos') return '<span class="tag t-aviso">' + T.fmtH(x.realMin) + '</span> <span class="sub">' + T.fmtH(-x.dif) + ' menos de lo planificado</span>';
+    return '<span class="tag t-aviso">' + T.fmtH(x.realMin) + '</span> <span class="sub">trabajó en su día libre</span>';
+  }
+  function estadoDia(f) {
+    var con = 0, falta = 0;
+    est.equipo.forEach(function (p) { var x = T.diaReal(est, p.id, f); if (x.plan || x.reg) con++; if (x.estado === 'sin-registro') falta++; });
+    return !con ? ['nada', 'sin turnos'] : !falta ? ['listo', 'registrado'] : falta < con ? ['parcial', 'faltan ' + falta] : ['falta', 'sin registrar'];
+  }
+  function tira() {
+    var lun = T.lunesDe(diaR), h = '';
+    for (var k = 0; k < 7; k++) {
+      var f = T.sumarDias(lun, k), s = estadoDia(f);
+      h += '<button type="button" class="' + s[0] + '" data-rd="' + f + '" aria-pressed="' + (f === diaR) + '">' + T.NOMBRES_DIA[k] + ' ' + f.slice(8) + '<small>' + s[1] + '</small></button>';
+    }
+    return h;
+  }
+  function pReal() {
+    if (!diaR) diaR = hoy();
+    var h = '<h2>Lo trabajado</h2>';
+    if (!est.equipo.length || !est.turnos.length) { $('#v-real').innerHTML = h + '<p class="vacio">Primero agrega tu equipo y tus turnos, o prueba con el ejemplo.</p>'; return; }
+    var r = T.reglas(est);
+    h += '<p class="sub">Al cierre del día, anota lo que pasó de verdad: quién vino y a qué hora entró y salió. Turnero lo compara con lo planificado y calcula las horas extra. La grilla se repite cada ' + (est.semanas === 1 ? 'semana' : est.semanas + ' semanas') + ', así que el plan de cualquier fecha sale solo.</p>';
+    h += '<div class="navdia"><button class="b" type="button" data-mov="-1" aria-label="Día anterior">←</button><div><label for="r-fecha">Día</label><input id="r-fecha" type="date" value="' + diaR + '"></div>' +
+      '<button class="b" type="button" data-mov="1" aria-label="Día siguiente">→</button><button class="b" type="button" id="r-hoy">Hoy</button></div>';
+    h += '<div class="tira" id="tira" role="group" aria-label="Días de la semana">' + tira() + '</div>';
+    h += '<div class="acc"><button class="b" type="button" id="r-dia">Todo el día según lo planificado</button><button class="b" type="button" id="r-sem">Toda la semana según lo planificado</button></div>';
+    h += '<h3>' + T.fechaLarga(diaR) + '-' + diaR.slice(0, 4) + '</h3>';
+    est.equipo.forEach(function (p) {
+      var x = T.diaReal(est, p.id, diaR), g = x.reg && !x.reg.ausente ? x.reg : null, id = p.id;
+      h += '<div class="fila-ed r" data-p="' + id + '"><div class="quien"><b>' + esc(p.nombre) + '</b><small class="sub">Plan: ' + textoPlan(x.plan) + '</small><div class="res" aria-live="polite">' + chipDia(x) + '</div></div>' +
+        '<div><label for="re-' + id + '">Entrada</label><input id="re-' + id + '" type="time" data-f="inicio" value="' + (g ? g.inicio : '') + '"></div>' +
+        '<div><label for="rs-' + id + '">Salida</label><input id="rs-' + id + '" type="time" data-f="fin" value="' + (g ? g.fin : '') + '"></div>' +
+        '<div><label for="rc-' + id + '">Colación (min)</label><input id="rc-' + id + '" type="number" min="0" max="180" step="5" data-f="colacion" value="' + (g ? g.colacion : x.plan ? x.plan.colacion : 0) + '"></div>' +
+        '<div><label for="rn-' + id + '">Nota</label><input id="rn-' + id + '" data-f="nota" maxlength="120" value="' + esc(x.nota) + '" placeholder="Opcional"></div>' +
+        '<div class="acc bts"><button class="b chico" type="button" data-acc="plan"' + (x.plan ? '' : ' disabled') + '>Según lo planificado</button><button class="b chico" type="button" data-acc="aus"' + (x.plan ? '' : ' disabled') + '>No vino</button>' +
+        '<button class="b chico" type="button" data-acc="del"' + (x.reg ? '' : ' disabled') + ' aria-label="Borrar el registro de ' + esc(p.nombre) + '">Borrar registro</button></div></div>';
+    });
+    h += '<details class="regla"><summary>Importar marcas desde un archivo (reloj control o planilla)</summary><p class="sub">Una línea por jornada: <code>fecha;persona;entrada;salida;colación;nota</code>. La fecha puede ser 2026-11-20 o 20-11-2026 y el nombre debe coincidir con el de tu equipo. Si ya había un registro ese día, se reemplaza.</p>' +
+      '<label for="r-csv">Pega aquí las líneas</label><textarea id="r-csv" placeholder="2026-11-20;Ana;07:32;16:05;30&#10;2026-11-20;Luis;12:30;21:10;30;Cierre"></textarea><div class="acc"><button class="b" type="button" id="r-imp">Importar marcas</button></div><div id="r-imp-res"></div></details>';
+    h += '<details class="regla"><summary>Cómo se calculan las horas extra</summary><div class="grid">' +
+      '<div><label for="r-met">Método</label><select id="r-met"><option value="">Según el país (' + (r.pais === 'ES' ? 'por día' : 'por semana') + ')</option><option value="semanal"' + (est.metodoExtra === 'semanal' ? ' selected' : '') + '>Por semana: sobre la jornada semanal</option><option value="diario"' + (est.metodoExtra === 'diario' ? ' selected' : '') + '>Por día: sobre lo planificado</option></select></div>' +
+      '<div><label for="r-tol">Tolerancia por día (min)</label><input id="r-tol" type="number" min="0" max="30" value="' + (+est.tolerancia || 0) + '"></div>' +
+      (r.pais === 'CL' ? '<div><label for="r-pacto">Pacto de horas extra vigente hasta</label><input id="r-pacto" type="date" value="' + esc(est.pactoExtrasHasta || '') + '"></div>' : '') + '</div>' +
+      '<p class="nota">' + (r.pais === 'CL'
+        ? 'En Chile las horas extra se determinan por semana: se suma lo trabajado y se resta la jornada pactada; los atrasos se compensan con las salidas tardías de la misma semana. El máximo es de 2 horas extra por día y, según el criterio de la Dirección del Trabajo, 12 por semana. Se pactan por escrito por un máximo de 3 meses renovables y se pagan con un recargo del 50 %.'
+        : 'En España el tope es de 80 horas extraordinarias al año; no cuentan las compensadas con descanso dentro de los 4 meses siguientes. Deben registrarse día a día y el trabajador recibe copia del resumen. A tiempo parcial no se pueden hacer (solo horas complementarias pactadas).') +
+      ' La tolerancia sirve para que 3 o 4 minutos de diferencia al marcar no cuenten como horas de más o de menos; no es un concepto legal.</p></details>';
+    h += '<div class="acc"><button class="b prim" type="button" data-ir2="informe">Siguiente: informe del mes →</button></div>';
+    $('#v-real').innerHTML = h;
+  }
+  function filaReal(f) {
+    var x = T.diaReal(est, f.dataset.p, diaR);
+    $('.res', f).innerHTML = chipDia(x);
+    $('[data-acc=del]', f).disabled = !x.reg;
+    $('#tira').innerHTML = tira();
+  }
+  $('#v-real').addEventListener('change', function (e) {
+    var t = e.target;
+    if (t.id === 'r-fecha') { if (T.esFecha(t.value)) { diaR = t.value; pReal(); } return; }
+    if (t.id === 'r-tol') { est.tolerancia = Math.max(0, Math.min(30, parseInt(t.value, 10) || 0)); guardar(); pReal(); return; }
+    if (t.id === 'r-met') { est.metodoExtra = t.value; guardar(); return; }
+    if (t.id === 'r-pacto') { est.pactoExtrasHasta = T.esFecha(t.value) ? t.value : ''; guardar(); return; }
+    var f = t.closest('[data-p]'); if (!f || !t.dataset.f) return;
+    var pid = f.dataset.p, ini = $('[data-f=inicio]', f).value, fin = $('[data-f=fin]', f).value, nota = $('[data-f=nota]', f).value.trim();
+    var reg = T.registro(est, pid, diaR);
+    if (!ini && !fin) { if (reg && t.dataset.f === 'nota') { reg.nota = nota.slice(0, 120); guardar(); } return; }
+    if (!ini || !fin) { $('.res', f).innerHTML = '<span class="sub">Falta la hora de ' + (ini ? 'salida' : 'entrada') + '.</span>'; return; }
+    var errs = T.marcar(est, pid, diaR, { inicio: ini, fin: fin, colacion: parseInt($('[data-f=colacion]', f).value, 10) || 0, nota: nota });
+    if (errs.length) { aviso(errs.join(' '), true); return; }
+    guardar(); filaReal(f);
+  });
+  $('#v-real').addEventListener('click', function (e) {
+    var t = e.target.closest('button'); if (!t) return;
+    if (t.dataset.mov) { diaR = T.sumarDias(diaR, +t.dataset.mov); pReal(); $('[data-mov="' + t.dataset.mov + '"]').focus(); }
+    else if (t.id === 'r-hoy') { diaR = hoy(); pReal(); }
+    else if (t.dataset.rd) { diaR = t.dataset.rd; pReal(); var b = $('[data-rd="' + diaR + '"]'); if (b) b.focus(); }
+    else if (t.id === 'r-dia' || t.id === 'r-sem') {
+      var a = t.id === 'r-dia' ? diaR : T.lunesDe(diaR), z = t.id === 'r-dia' ? diaR : T.sumarDias(a, 6);
+      if (z > hoy() && !confirm('Vas a registrar días que aún no pasan. ¿Seguir?')) return;
+      var n = T.precargar(est, a, z); guardar(); pReal();
+      aviso(n ? (n === 1 ? 'Se registró 1 jornada' : 'Se registraron ' + n + ' jornadas') + ' según lo planificado. Corrige las que fueron distintas.' : 'No había nada pendiente: los días planificados ya tenían registro.');
+    } else if (t.dataset.acc) {
+      var f = t.closest('[data-p]'), pid = f.dataset.p, pl = T.diaReal(est, pid, diaR).plan;
+      if (t.dataset.acc === 'del') T.quitarMarca(est, pid, diaR);
+      else if (t.dataset.acc === 'aus') T.marcar(est, pid, diaR, { ausente: true, nota: $('[data-f=nota]', f).value.trim() });
+      else if (pl) T.marcar(est, pid, diaR, { inicio: pl.inicio, fin: pl.fin, colacion: pl.colacion, nota: $('[data-f=nota]', f).value.trim() });
+      guardar(); pReal();
+      var q = $('.fila-ed.r[data-p="' + pid + '"] [data-acc="' + t.dataset.acc + '"]'); if (q && !q.disabled) q.focus();
+    } else if (t.id === 'r-imp') {
+      var r = T.leerMarcasCSV(est, $('#r-csv').value), n2 = T.aplicarMarcas(est, r.marcas);
+      if (n2) { guardar(); var ult = r.marcas[r.marcas.length - 1].fecha, txt = $('#r-csv').value; diaR = ult; pReal(); $('#v-real details').open = true; $('#r-csv').value = r.errores.length ? txt : ''; }
+      $('#r-imp-res').innerHTML = (n2 ? '<p class="ok">' + (n2 === 1 ? 'Se importó 1 jornada.' : 'Se importaron ' + n2 + ' jornadas.') + '</p>' : '') + (r.errores.length ? '<p class="err">' + esc(r.errores.slice(0, 8).join('\n')) + (r.errores.length > 8 ? '\n… y ' + (r.errores.length - 8) + ' más.' : '') + '</p>' : '');
+    } else if (t.dataset.ir2) ir(t.dataset.ir2);
+  });
+
+  // ---------- 8. Informe del mes ----------
+  var mesI = null, persI = '';
+  function mesPorDefecto() {
+    var m = '', h = hoy();
+    Object.keys(est.real || {}).forEach(function (pid) { Object.keys(est.real[pid]).forEach(function (f) { if (f <= h && f.slice(0, 7) > m) m = f.slice(0, 7); }); });
+    return m || h.slice(0, 7);
+  }
+  function pInforme() {
+    var h = '<h2>Informe del mes</h2>';
+    if (!est.equipo.length) { $('#v-informe').innerHTML = h + '<p class="vacio">Primero agrega tu equipo, o prueba con el ejemplo.</p>'; return; }
+    if (!mesI || !T.esMes(mesI)) mesI = mesPorDefecto();
+    if (persI && !est.equipo.some(function (p) { return p.id === persI; })) persI = '';
+    var inf = T.informeMes(est, mesI, hoy()), r = inf.reglas, uno = persI ? est.equipo.find(function (p) { return p.id === persI; }) : null;
+    var ps = inf.personas.filter(function (p) { return !persI || p.id === persI; });
+    function tot(k) { return ps.reduce(function (s, p) { return s + p[k]; }, 0); }
+    h += '<p class="soloimp"><b>' + esc(est.negocio || 'Informe de jornada') + '</b> · ' + T.nombreMes(mesI) + (uno ? ' · ' + esc(uno.nombre) + (uno.rol ? ' (' + esc(uno.rol) + ')' : '') : '') + '</p>';
+    h += '<div class="navmes"><button class="b" type="button" data-mes="-1">← Mes anterior</button><b aria-live="polite">' + T.nombreMes(mesI) + '</b><button class="b" type="button" data-mes="1">Mes siguiente →</button></div>';
+    h += '<div class="grid dos noimp"><div><label for="i-per">Ver</label><select id="i-per"><option value="">Todo el equipo</option>' + est.equipo.map(function (p) { return '<option value="' + p.id + '"' + (p.id === persI ? ' selected' : '') + '>' + esc(p.nombre) + '</option>'; }).join('') + '</select></div></div>';
+    if (!ps.some(function (p) { return p.trabajados || p.ausencias; })) h += '<p class="vacio">No hay nada registrado en ' + T.nombreMes(mesI) + '. Anota las jornadas en «Lo trabajado».</p>';
+    h += '<div class="kpis"><div class="kpi"><b>' + T.fmtH(tot('realMin')) + '</b><span>trabajadas</span></div><div class="kpi"><b>' + T.fmtH(tot('planMin')) + '</b><span>planificadas en los días registrados</span></div>' +
+      '<div class="kpi"><b class="' + (tot('extraMes') ? 't-aviso' : '') + '">' + T.fmtH(tot('extraMes')) + '</b><span>horas extra del mes</span></div><div class="kpi"><b>' + tot('sinRegistro') + '</b><span>jornadas sin registrar</span></div></div>';
+    h += '<p class="nota">' + (inf.metodo === 'semanal'
+      ? 'Horas extra por semana: lo trabajado de lunes a domingo menos la jornada de esa semana. Cuentan las semanas que terminan en este mes, que es cuando corresponde pagarlas.'
+      : 'Horas extra por día: lo trabajado menos lo planificado ese día.') +
+      (r.maxExtraAnual != null ? ' El tope de ' + r.maxExtraAnual + ' horas al año no cuenta las compensadas con descanso dentro de los 4 meses siguientes: anótalas en la columna «Compensadas».' : '') + '</p>';
+    var et = { error: 'Incumple', aviso: 'Revisa', info: 'Dato' };
+    inf.alertas.filter(function (a) { return !persI || a.persona === persI; }).forEach(function (a) {
+      h += '<div class="item ' + a.nivel + '"><span class="tag t-' + a.nivel + '">' + et[a.nivel] + '</span> ' + esc(a.texto) + (a.fecha ? ' <button class="b chico noimp" type="button" data-verdia="' + a.fecha + '">Ver el día</button>' : '') + '</div>';
+    });
+    h += '<h3>Resumen por persona</h3><div class="tabla"><table><thead><tr><th scope="col">Persona</th><th class="num" scope="col">Días</th><th class="num" scope="col">Ausencias</th><th class="num" scope="col">Sin registrar</th><th class="num" scope="col">Planificadas</th><th class="num" scope="col">Trabajadas</th><th class="num" scope="col">Diferencia</th><th class="num" scope="col">Extra del mes</th><th scope="col">Compensadas (h)</th><th class="num" scope="col">Extra del año</th></tr></thead><tbody>';
+    ps.forEach(function (p) {
+      h += '<tr><th scope="row">' + esc(p.nombre) + '</th><td class="num">' + p.trabajados + '</td><td class="num">' + p.ausencias + '</td><td class="num">' + p.sinRegistro + '</td><td class="num">' + T.fmtH(p.planMin) + '</td><td class="num"><b>' + T.fmtH(p.realMin) + '</b></td><td class="num">' + (p.dif > 0 ? '+' : '') + T.fmtH(p.dif) + '</td>' +
+        '<td class="num"><b class="' + (p.extraMes ? 't-aviso' : '') + '">' + T.fmtH(p.extraMes) + '</b></td><td><input class="comp" data-comp="' + p.id + '" inputmode="decimal" aria-label="Horas extra de ' + esc(p.nombre) + ' compensadas con descanso en ' + T.nombreMes(mesI) + '" value="' + (p.compensadas ? String(Math.round(p.compensadas / 0.6) / 100).replace('.', ',') : '') + '" placeholder="0"></td>' +
+        '<td class="num">' + T.fmtH(p.extraAnio) + (r.maxExtraAnual != null ? ' / ' + r.maxExtraAnual + ' h' : '') + '</td></tr>';
+    });
+    h += '</tbody></table></div>';
+    h += '<h3>Detalle por día</h3>';
+    ps.forEach(function (p) {
+      var filas = p.dias.filter(function (x) { return x.reg || (x.plan && inf.primerRegistro && x.fecha >= inf.primerRegistro && x.fecha <= hoy()); });
+      h += '<details class="regla det"' + (persI ? ' open' : '') + '><summary>' + esc(p.nombre) + ' · ' + T.fmtH(p.realMin) + ' trabajadas' + (p.extraMes ? ' · ' + T.fmtH(p.extraMes) + ' extra' : '') + '</summary>';
+      if (!filas.length) { h += '<p class="sub">Sin jornadas registradas ni pendientes en el mes.</p></details>'; return; }
+      h += '<div class="tabla"><table><thead><tr><th scope="col">Fecha</th><th scope="col">Plan</th><th scope="col">Entrada</th><th scope="col">Salida</th><th class="num" scope="col">Colación</th><th class="num" scope="col">Horas</th><th class="num" scope="col">Diferencia</th><th scope="col">Estado</th><th scope="col">Nota</th></tr></thead><tbody>';
+      filas.forEach(function (x) {
+        var g = x.reg && !x.reg.ausente ? x.reg : null;
+        h += '<tr><td>' + T.fechaLarga(x.fecha) + '</td><td>' + (x.plan ? esc(x.plan.nombre) + ' ' + x.plan.inicio + '–' + x.plan.fin : 'Libre') + '</td><td>' + (g ? g.inicio : '—') + '</td><td>' + (g ? g.fin : '—') + '</td><td class="num">' + (g ? g.colacion + ' min' : '—') + '</td><td class="num">' + (x.reg ? T.fmtH(x.realMin) : '—') + '</td><td class="num">' + (x.reg && x.dif ? (x.dif > 0 ? '+' : '') + T.fmtH(x.dif) : '') + '</td><td>' + T.ESTADOS[x.estado] + '</td><td>' + esc(x.nota) + '</td></tr>';
+      });
+      h += '</tbody></table></div>';
+      if (inf.metodo === 'semanal' && p.semanas.length) h += '<p class="sub">' + p.semanas.filter(function (s) { return s.registros; }).map(function (s) { return 'Semana del ' + T.fechaCorta(s.lunes) + ': ' + T.fmtH(s.real) + ' trabajadas, jornada de ' + T.fmtH(s.base) + ', ' + T.fmtH(s.extra) + ' extra'; }).join(' · ') + '</p>';
+      h += '</details>';
+    });
+    if (uno) h += '<div class="firmas"><span>Firma de ' + esc(uno.nombre) + '</span><span>Firma del empleador</span></div>';
+    h += '<p class="sub">Este informe es un resumen de apoyo para pagar bien y conversar con tu equipo. No reemplaza el registro de asistencia que exige la ley.</p>';
+    h += '<div class="acc"><button class="b" type="button" id="i-csv">Descargar resumen (CSV)</button><button class="b" type="button" id="i-det">Descargar detalle por día (CSV)</button><button class="b prim" type="button" id="i-imp">Imprimir' + (uno ? ' el informe de ' + esc(uno.nombre) : '') + '</button></div>';
+    $('#v-informe').innerHTML = h;
+  }
+  $('#v-informe').addEventListener('change', function (e) {
+    var t = e.target;
+    if (t.id === 'i-per') { persI = t.value; pInforme(); $('#i-per').focus(); }
+    else if (t.dataset.comp) {
+      var v = t.value.trim().replace(',', '.');
+      if (v && !(+v >= 0 && +v <= 200)) { aviso('Horas compensadas: un número entre 0 y 200, o vacío.', true); return; }
+      est.comp = est.comp || {}; est.comp[t.dataset.comp] = est.comp[t.dataset.comp] || {};
+      if (+v > 0) est.comp[t.dataset.comp][mesI] = Math.round(+v * 60); else delete est.comp[t.dataset.comp][mesI];
+      guardar(); var pid = t.dataset.comp; pInforme(); var n = $('[data-comp="' + pid + '"]'); if (n) n.focus();
+    }
+  });
+  $('#v-informe').addEventListener('click', function (e) {
+    var t = e.target.closest('button'); if (!t) return;
+    if (t.dataset.mes) { mesI = T.sumarMes(mesI, +t.dataset.mes); pInforme(); $('[data-mes="' + t.dataset.mes + '"]').focus(); }
+    else if (t.dataset.verdia) { diaR = t.dataset.verdia; ir('real'); }
+    else if (t.id === 'i-csv') descargar('turnero-informe-' + mesI + '.csv', T.informeMesCSV(est, mesI, hoy()), 'text/csv;charset=utf-8');
+    else if (t.id === 'i-det') descargar('turnero-detalle-' + mesI + '.csv', T.detalleMesCSV(est, mesI, persI || null, hoy()), 'text/csv;charset=utf-8');
+    else if (t.id === 'i-imp') window.print();
+  });
+
   // ---------- Respaldo ----------
   $('#ejemplo').addEventListener('click', function () {
     if ((est.equipo.length || est.turnos.length) && !confirm('El ejemplo reemplaza lo que tienes. ¿Seguir? (Exporta un respaldo antes si lo necesitas.)')) return;
-    est = T.ejemplo(hoy()); semana = 0; cambio(); ir('grilla');
-    aviso('Ejemplo cargado: una cafetería con 6 personas y un ciclo de 2 semanas. Mira las celdas en rojo de Diego.');
+    est = T.ejemplo(hoy()); semana = 0; mesI = null; diaR = null; cambio(); ir('grilla');
+    aviso('Ejemplo cargado: una cafetería con 6 personas y un ciclo de 2 semanas. Mira las celdas en rojo de Diego y, en «Informe del mes», la semana pasada ya registrada.');
   });
   $('#exp-json').addEventListener('click', function () { descargar('turnero-respaldo-' + hoy() + '.json', JSON.stringify(est, null, 1), 'application/json'); });
   $('#imp-json').addEventListener('change', function (e) {
@@ -310,18 +490,18 @@
       try {
         var o = JSON.parse(lr.result), errs = T.validarEstado(o);
         if (errs.length) { aviso('No se pudo importar:\n' + errs.slice(0, 5).join('\n'), true); return; }
-        est = o; semana = 0; cambio(); ir('grilla'); aviso('Respaldo importado.');
+        est = T.normalizar(o); semana = 0; mesI = null; diaR = null; cambio(); ir('grilla'); aviso('Respaldo importado.');
       } catch (x) { aviso('El archivo no es un JSON válido.', true); }
       e.target.value = '';
     };
     lr.readAsText(f);
   });
   $('#borrar').addEventListener('click', function () {
-    if (!confirm('¿Borrar el equipo, los turnos y la grilla de este navegador? No se puede deshacer.')) return;
-    est = T.estadoVacio(hoy()); cambio(); ir('negocio'); aviso('Se borró todo.');
+    if (!confirm('¿Borrar el equipo, los turnos, la grilla y las jornadas registradas de este navegador? No se puede deshacer.')) return;
+    est = T.estadoVacio(hoy()); mesI = null; diaR = null; cambio(); ir('negocio'); aviso('Se borró todo.');
   });
 
-  est = cargar();
+  est = T.normalizar(cargar());
   if (!est.cobertura) est.cobertura = [0, 0, 0, 0, 0, 0, 0];
   pintarTabs(); ir(est.equipo.length ? 'grilla' : 'negocio');
   if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(function () {});

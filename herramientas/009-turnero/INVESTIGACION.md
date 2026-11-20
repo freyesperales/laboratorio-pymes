@@ -101,3 +101,52 @@ Corrida del miércoles 18-11-2026 en el PC local. Cuatro exploradores trabajaron
 - Las reglas vienen precargadas como perfiles editables (Chile 42 h, Chile 40 h desde abril de 2028, España 40 h). Los convenios colectivos, los pactos sindicales (52 h) y las jornadas especiales no se modelan: el usuario puede ajustar los topes.
 - El tope de 45 h semanales dentro del ciclo y la regla de no más de 2 semanas seguidas vienen del art. 22 bis (texto en iura.cl, no en BCN): se aplican como regla de ciclo pactado.
 - En España el promedio de 40 h es anual; Turnero lo controla sobre el ciclo planificado, que es más estricto, y lo dice en la interfaz.
+
+---
+
+# Continuación · fase 2 (2026-11-20)
+
+Corrida del viernes 20-11-2026 en el PC local. Corrida de continuación: dos exploradores en paralelo, uno para verificar las reglas que la fase 2 programa y otro para tendencias de la semana. **Cada fuente se abrió en esta corrida** (fecha de consulta de todas: **2026-11-20**). Las dos páginas de la Dirección del Trabajo que sostienen el cálculo las abrió además el orquestador.
+
+## Fuentes de la fase 2
+
+| URL | Fecha de la fuente | Qué aporta |
+|---|---|---|
+| https://www.dt.gob.cl/portal/1628/w3-article-60176.html | modificada 2026-04-28 | **Oficial, verificada por el orquestador.** Las horas extra se determinan por semana: al terminar la semana se suma el registro; es extra lo que excede de 42 horas «o de la pactada si es menor»; los atrasos e inasistencias se compensan con el exceso diario de la misma semana; si el mes termina a mitad de semana, se espera a que termine y se pagan en el mes en que terminó. Recargo del 50 %. |
+| https://www.dt.gob.cl/portal/1628/w3-article-60157.html | modificada 2026-04-28 | **Oficial, verificada por el orquestador.** El límite de horas extra es de 12 por semana; con jornada de cinco días, el sexto día admite el saldo de esas 12 con un máximo de 7 horas (42/6). |
+| https://www.dt.gob.cl/portal/1628/w3-article-60148.html | modificada 2026-04-28 | Oficial. Para las horas extra se suman también los minutos. |
+| https://www.dt.gob.cl/portal/1628/w3-article-60151.html | modificada 2026-04-28 | Oficial. Si el total semanal queda bajo la jornada, el empleador puede descontar las horas faltantes. |
+| https://leyes-cl.com/codigo_del_trabajo/30.htm | texto vigente, sin fecha | Art. 30: jornada extraordinaria es la que excede del máximo legal o de la pactada, si fuese menor. Fuente no oficial que reproduce la ley (bcn.cl no cargó). |
+| https://leyes-cl.com/codigo_del_trabajo/32.htm | texto vigente, sin fecha | Art. 32: pacto por escrito para necesidades temporales, vigencia de hasta 3 meses, renovable; recargo del 50 %; compensación con feriado adicional por acuerdo escrito (1 hora extra = 1,5 de feriado, hasta 5 días hábiles al año). Fuente no oficial. |
+| https://leyes-cl.com/codigo_del_trabajo/31.htm | texto vigente | Art. 31: horas extra «hasta un máximo de dos por día». Fuente no oficial. |
+| https://www.dt.gob.cl/legislacion/1624/w3-article-129783.html | 2026-09-22 | Oficial. El registro electrónico de asistencia sigue regido por la Resolución Exenta 38 del 26-04-2024. |
+| https://www.boe.es/buscar/act.php?id=BOE-A-2015-11430 | consolidado 2026-11-18 | **Oficial.** Art. 35.2: 80 horas al año, sin contar las compensadas con descanso dentro de los 4 meses siguientes. Art. 35.3: no cuentan las de fuerza mayor. Art. 35.5: se registran día a día, se totalizan y el trabajador recibe copia del resumen. Art. 12.4.c: a tiempo parcial no se pueden hacer horas extraordinarias. Art. 36.1 y 6.3: tampoco los trabajadores nocturnos ni los menores de 18 años. |
+| https://www.lamoncloa.gob.es/consejodeministros/referencias/Paginas/2026/20261117-referencia-rueda-de-consejo-ministros.aspx | 2026-11-17 | Oficial. En el Consejo de Ministros del 17-11 no aparece el real decreto del registro horario digital. Que no esté publicado se apoya en esta referencia y en fuentes de proveedores; el buscador del BOE dio error. |
+
+## Fuentes de tendencias de la semana
+
+| URL | Fecha de la fuente | Qué aporta |
+|---|---|---|
+| https://www.boe.es/diario_boe/txt.php?id=BOE-A-2026-24121 | 2026-11-18 | **Oficial.** Real Decreto-ley 39/2026: toda empresa debe llevar un registro retributivo con medias y medianas por sexo, conservarlo cuatro años y responder solicitudes de información salarial en dos meses. También modificó el art. 12 del Estatuto (apartados 4.e y 5.d); el detalle de ese cambio quedó **sin verificar**. |
+| https://civio.es/el-boe-nuestro-de-cada-dia/2026/11/18/decreto-ley-trabajo/ | 2026-11-18 | Divulgación. Las ofertas de empleo deben indicar la retribución inicial y el convenio; aviso anual a la plantilla. |
+| https://www.latercera.com/pulso/noticia/congreso-aprueba-postergacion-de-la-ley-de-proteccion-de-datos/ | 2026-11-17 | Prensa. El Congreso despachó la postergación de la Ley 21.719 al 15-10-2027; publicación en el Diario Oficial **sin verificar**. |
+| https://kubocontable.cl/blog/guias-despacho-1-noviembre-2026-que-cambia | actualizada 2026-11-06 | Divulgación. Nuevos campos obligatorios en la guía de despacho, con exigencia plena desde el 01-05-2027 y aviso del modelo de transporte al SII antes del 31-01-2027. Texto oficial de la resolución **sin verificar**. |
+| https://www.producthunt.com/leaderboard/weekly/2026/47 | semana del 2026-11-16 | Los diez primeros son agentes de IA y servicios con cuenta; nada local ni gratuito para una pyme. |
+| https://hn.algolia.com/api/v1/search_by_date?tags=show_hn&query=pdf | 2026-11-08 a 2026-11-18 | Varios Show HN de utilidades de PDF que no suben archivos (tachar datos personales, correo a PDF), todos con pocos puntos: la demanda no está probada. |
+
+**Total de la continuación: 16 enlaces distintos abiertos hoy.** Reddit siguió bloqueado para lectura: no hay datos de comunidades.
+
+## Qué cambió en el plan
+
+1. **Las horas extra chilenas se calculan por semana, no por día.** El plan decía «horas extra por día y por mes». La fase 2 usa el método semanal en Chile (con compensación de atrasos dentro de la semana y semanas que se cuentan en el mes en que terminan) y deja el método por día para España o para quien lo prefiera.
+2. **Se agregó el tope de 12 horas extra semanales** (criterio de la DT) junto al de 2 por día, y el aviso de pacto escrito de hasta 3 meses.
+3. **En España se agregaron las horas compensadas con descanso**, que no cuentan para las 80 anuales, y el aviso de tiempo parcial.
+4. Sin jurado: es una continuación. Las ideas nuevas (Sueldo Claro, Guía Lista, Tacha) se agregaron a `PROPUESTAS.md`.
+
+## Supuestos y límites de la fase 2
+
+- En un ciclo de varias semanas, la base de cada semana es lo planificado para esa semana. Es un criterio propio, coherente con el art. 22 bis, pero **no verificado** en un dictamen: se dice en el README.
+- La excepción del sexto día (hasta 7 horas) no se modela: el día libre trabajado genera un aviso y se controla el tope semanal de 12.
+- No se calcula el valor en dinero de las horas extra.
+- Los artículos 30 a 33 del Código del Trabajo se leyeron en leyes-cl.com, no en bcn.cl; las reglas que se programan están además respaldadas por las páginas de la DT.
+- La tolerancia por día es una comodidad práctica, no un concepto legal, y viene en 0.
