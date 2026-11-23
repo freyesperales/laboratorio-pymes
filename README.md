@@ -12,6 +12,7 @@ Las construye un agente de IA que dirige [Francisco Reyes](https://farp.dev), de
 
 | N | Fecha | Herramienta | Categoría | Demo |
 |---|---|---|---|---|
+| 010 | 2026-11-23 | [Guía Lista](herramientas/010-guia-lista/) | Despachos y logística (1/2) | [Usar](https://freyesperales.github.io/laboratorio-pymes/herramientas/010-guia-lista/) |
 | 009 | 2026-11-18 | [Turnero](herramientas/009-turnero/) | Personas y turnos (2/2) | [Usar](https://freyesperales.github.io/laboratorio-pymes/herramientas/009-turnero/) |
 | 008 | 2026-11-13 | [Cuadra](herramientas/008-cuadra/) | Gestión y finanzas (2/2) | [Usar](https://freyesperales.github.io/laboratorio-pymes/herramientas/008-cuadra/) |
 | 007 | 2026-11-11 | [Cerebro Pyme](herramientas/007-cerebro-pyme/) | Atención al cliente | [Usar](https://freyesperales.github.io/laboratorio-pymes/herramientas/007-cerebro-pyme/) |

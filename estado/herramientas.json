@@ -1,5 +1,5 @@
 {
- "ultimo_numero": 9,
+ "ultimo_numero": 10,
  "herramientas": [
   {
    "n": 1,
@@ -131,6 +131,22 @@
     "minutos": 14,
     "nota": "Continuación con 2 exploradores; el orquestador abrió las dos páginas de la Dirección del Trabajo que sostienen el cálculo semanal y el tope de 12 horas. Cambio de plan: en Chile las horas extra se calculan por semana, no por día. Vistas nuevas «Lo trabajado» e «Informe del mes», importación de marcas por CSV, horas compensadas e informe imprimible. 70 pruebas pasan. El servidor de vista previa no se pudo iniciar en la corrida desatendida: la interfaz se probó con Edge sin ventana sobre una copia local (flujo completo, sin errores de consola, capturas a 500 y 1200 px). Compuerta de profundidad: pasa."
    }
+  },
+  {
+   "n": 10,
+   "fecha": "2026-11-23",
+   "nombre": "Guía Lista",
+   "slug": "010-guia-lista",
+   "gancho": "Revisa tu guía de despacho antes de que salga el camión: chofer, patente, origen y destino como los pide ahora el SII, con el resolutivo que respalda cada aviso.",
+   "categoria": "Despachos y logística",
+   "tipo": "nueva",
+   "fases": "1/2",
+   "demo_url": "https://freyesperales.github.io/laboratorio-pymes/herramientas/010-guia-lista/",
+   "repo_url": "https://github.com/freyesperales/laboratorio-pymes/tree/main/herramientas/010-guia-lista",
+   "estado": "en-fases",
+   "enlaces_investigacion": 35,
+   "minutos": 15,
+   "nota": "4 exploradores en paralelo; el orquestador releyó completa la Resolución Ex. SII N° 144 (texto y anexo de campos, extraído del PDF), la aclaración del SII del 29-10-2026 y el art. 20 de la Ley 7/1996 en el BOE. 54 pruebas pasan. El servidor de vista previa no se pudo iniciar en la corrida desatendida: la interfaz se probó con Edge sin ventana sobre una copia local (19 comprobaciones del flujo completo, 0 errores de JavaScript, capturas a 500 y 1200 px). Compuerta de profundidad: pasa."
   }
  ]
 }

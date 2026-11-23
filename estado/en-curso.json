@@ -1,0 +1,29 @@
+{
+ "n": 10,
+ "slug": "010-guia-lista",
+ "nombre": "Guía Lista",
+ "fases_total": 2,
+ "fase_actual": 1,
+ "plan": [
+  {
+   "fase": 1,
+   "objetivo": "Diagnóstico de modalidad, libreta de choferes/vehículos/transportistas/direcciones, armado y revisión de despachos con cita del resolutivo, hoja de datos con etiquetas DTE, mensaje al transportista, pendientes de datos diferidos, fechas clave con .ics, respaldo JSON y CSV",
+   "hecho": true
+  },
+  {
+   "fase": 2,
+   "objetivo": "Revisar un XML de guía (DTE 52) o factura (33) ya emitida contra las mismas reglas; carga de despachos en lote desde CSV; rutas frecuentes como plantillas; informe mensual imprimible",
+   "hecho": false
+  }
+ ],
+ "siguiente_paso": "Antes de escribir el lector de XML, abrir en sii.cl el documento «Formato de Documentos Tributarios Electrónicos» (ruta citada en el resolutivo 1° de la Res. 144) y confirmar la ubicación exacta de cada etiqueta (IdDoc/IndTraslado, Transporte/Patente, RUTTrans, Chofer/RUTChofer y NombreChofer, DirDest, CmnaDest, Referencia). Si no se puede abrir, hacer solo carga en lote, plantillas e informe. Revisar también si el SII ya publicó el aplicativo para informar el modelo de transporte y enlazarlo en «Fechas clave».",
+ "decisiones": [
+  "Se muestran las dos lecturas de la vigencia (1-11-2026 según el resolutivo 18°; 1-05-2027 según la noticia del SII del 29-10-2026) sin decidir por el usuario.",
+  "Exigen precio unitario los tipos de traslado 1, 9 y 11; criterio del laboratorio, la resolución no trae tabla.",
+  "El formato de patente solo genera aviso: la resolución no lo define.",
+  "La guía tercerizada (tipo 10) no admite datos diferidos y exige referencia completa; lectura del resolutivo 5°.",
+  "Comunas en texto libre: no se incorporó una lista para no escribir 346 nombres sin fuente.",
+  "El formulario del despacho no se redibuja al escribir (función marcar) para no perder el foco del teclado."
+ ],
+ "actualizado": "2026-11-23"
+}
