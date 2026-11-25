@@ -118,4 +118,53 @@ Corrida del 23-11-2026 (lunes). Cuatro exploradores en paralelo con búsqueda y 
 - **Formato de patente.** La resolución no lo define. La revisión de forma (6 caracteres en tres patrones habituales) es criterio propio y por eso solo genera aviso, nunca error.
 - **Dígito verificador del RUT.** Algoritmo de módulo 11 de uso general; no proviene de la resolución.
 - **«Diferido» o «Sin Dato».** La resolución dice «según corresponda» sin precisar cuándo va cada uno; se aceptan ambos.
-- No se revisó el documento técnico «Formato de Documentos Tributarios Electrónicos»: la fase 2 debe leerlo antes de interpretar archivos XML.
+- ~~No se revisó el documento técnico «Formato de Documentos Tributarios Electrónicos»~~: revisado en la corrida del 25-11-2026 (ver abajo).
+
+---
+
+# Corrida de continuación · 25-11-2026 (miércoles) · fase 2 de 2
+
+Dos exploradores en paralelo. Uno abrió el formato técnico del SII que la fase 1 dejó pendiente; el otro buscó tendencias nuevas para `PROPUESTAS.md`. El orquestador abrió de nuevo el esquema XSD descargado y comprobó dónde cuelga cada etiqueta, y confirmó en el BOE el título de los dos reales decretos-ley citados. Todas las fuentes se consultaron el **25-11-2026**.
+
+## Fuentes abiertas
+
+### Formato técnico del documento tributario electrónico (base de la fase 2)
+| Fuente | Fecha de la fuente | Qué aporta |
+|---|---|---|
+| https://www.sii.cl/factura_electronica/factura_mercado/schema_dte.zip | XSD «Fecha Actualizacion: 06/02/2026» | **Oficial.** Esquema vigente `DTE_v10.xsd`. El orquestador comprobó en el archivo que `Patente`, `PatenteCarro`, `RUTTrans`, `Chofer/RUTChofer`, `Chofer/NombreChofer`, `DirDest`, `CmnaDest`, `FchSalida`, `HraSalida` y `FchLlegada` cuelgan de `Encabezado/Transporte`, y que `IndTraslado` solo admite del 1 al 9. |
+| https://www.sii.cl/factura_electronica/factura_mercado/formato_dte_202602.pdf | versión 2.5, febrero de 2026 | **Oficial.** Largos máximos: `NombreChofer` 30, `Patente` y `PatenteCarro` 8, `DirOrigen` y `DirDest` 70, `CmnaOrigen` y `CmnaDest` 20, `NmbItem` 80, `UnmdItem` 4. `HraSalida` aparece como HH:MI:SS. |
+| https://www.sii.cl/servicios_online/3532-formato_xml-3811.html | sin fecha | Oficial. Página que enlaza el esquema vigente. |
+| https://www.sii.cl/servicios_online/3532-descripcion_formato-3811.html | sin fecha | Oficial. Página que enlaza el formato v2.5. |
+| https://www.sii.cl/factura_electronica/schema_dte.zip | 2011 | Oficial pero **obsoleto**: no trae los campos nuevos. Se descartó. |
+| https://www.sii.cl/normativa_legislacion/resoluciones/2026/reso144.pdf | 23-10-2026 | Oficial. El anexo (página 8) agrega los códigos 10, 11 y 12 de IndTraslado y remite los campos al formato DTE. Anuncia un manual técnico del «Anexo de Transporte Tercerizado» que no se encontró publicado. |
+| https://www.sii.cl/noticias/2026/241126noti02aav.htm | 24-11-2026 | **Oficial.** El SII inicia reuniones con gremios para implementar la norma «que rige desde el 1 de mayo de 2027»; no publica aún el acceso para informar el modelo de transporte. |
+| https://www.sii.cl/noticias/2026/index.html | noviembre de 2026 | Oficial. No hay otras noticias de noviembre sobre guías o traslados. |
+
+### Tendencias de la semana (para `PROPUESTAS.md`)
+| Fuente | Fecha de la fuente | Qué aporta |
+|---|---|---|
+| https://www.boe.es/diario_boe/txt.php?id=BOE-A-2026-24700 | 25-11-2026 | **Oficial.** Real Decreto-ley 42/2026 (España): permisos por duelo, ayuda para morir, nacimiento y cuidado del menor, adaptación y reducción de jornada. Título comprobado por el orquestador. |
+| https://www.boe.es/diario_boe/txt.php?id=BOE-A-2026-24701 | 25-11-2026 | **Oficial.** Real Decreto-ley 43/2026: medidas tributarias para autónomos; según el explorador, mueve el plazo de Verifactu al último plazo de la factura electrónica, sin fecha de calendario en el texto. |
+| https://alvamarconsultores.com/verifactu-se-retrasa-a-2028/ | act. 25-11-2026 | Secundaria. Traduce ese plazo a octubre de 2028 (**sin verificar** en el Real Decreto 238/2026). |
+| https://www.elperiodista.cl/2026/11/camara-aprueba-postergar-hasta-octubre-de-2027-entrada-en-vigencia-de-ley-de-proteccion-de-datos-personales/ | 17-11-2026 | Secundaria. El Congreso despachó la postergación de la Ley 21.719 al 15-10-2027; falta su publicación en el Diario Oficial (**sin verificar** en fuente oficial). |
+| https://www.diarioconstitucional.cl/asuntos-de-interes-publico/black-friday-2026-en-chile-fechas-despachos-y-como-planificar-las-compras-de-navidad | 12-11-2026 | Secundaria. Black Friday del 27 al 30-11; la duda más repetida es si el pedido llega antes del 24-12. |
+| https://hermitcrm.io/ | Show HN del 23-11-2026 | CRM local y gratuito para trabajadores solos, sin suscripción: otra señal de herramientas que guardan los datos en el equipo. |
+
+**No se pudo abrir:** la nota de la Cámara de Diputados sobre la Ley 21.719 (403) y Product Hunt (sin contenido). No se encontró el aplicativo del SII para informar el modelo de transporte ni el manual del Anexo de Transporte Tercerizado.
+
+## Qué cambió en el plan con esta investigación
+- **El lector de XML se escribió contra el esquema vigente**, no contra suposiciones: los campos nuevos se buscan dentro de `<Transporte>` (y, por si un programa los ubica en otro lugar del encabezado, se buscan también ahí).
+- **Códigos 10, 11 y 12.** Son norma publicada, pero el XSD vigente no los admite. La plataforma los acepta y avisa que hay que confirmar con el sistema de facturación que ya los recibe.
+- **Largos máximos.** Se agregaron avisos cuando un dato supera lo que admite el formato (por ejemplo, un nombre de chofer de más de 30 caracteres).
+- **Hora de salida.** Se acepta HH:MM y HH:MM:SS, porque el propio SII la describe de las dos formas.
+- **Peso y volumen.** El formato no tiene una etiqueta propia para el peso de cada línea; el lector lo busca en `DscItem` («Peso: 520 kg»), igual que lo escribe la hoja de datos de la fase 1.
+- **Fechas clave.** Se agregó la noticia del 24-11-2026 y la nota de que al 25-11 el SII aún no publica el acceso para informar el modelo de transporte.
+
+## Decisiones de la fase 2
+- El lector de XML es propio y no usa el analizador del navegador, para que las mismas pruebas corran en Node. Rechaza `DOCTYPE` (un DTE no lo usa y así se evitan entidades externas).
+- La firma electrónica del XML **no se valida**: se leen los datos. Se dice en la interfaz.
+- Si una factura no trae `IndTraslado`, se revisa como «Operación constituye venta» (1) y se avisa.
+- La dirección del receptor no reemplaza el destino efectivo: si falta `DirDest`, se marca como falta.
+- Al agregar documentos del XML a los despachos no se duplican: se reconoce el par documento y folio.
+- En la carga en lote, una fila es una línea de producto y las filas con el mismo «nombre» forman un despacho. Se aceptan también los encabezados del formato DTE.
+- Las rutas frecuentes guardan lo fijo del viaje (origen, destino, transportista, chofer, vehículo, tipo y productos) y dejan en blanco cantidades y pesos.

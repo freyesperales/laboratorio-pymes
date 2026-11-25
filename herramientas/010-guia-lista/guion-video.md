@@ -26,3 +26,24 @@ Notas para grabar:
 - Tono directo, sin alarmar: los campos son exigibles para todos desde el 1 de mayo de 2027; hoy es para prepararse.
 - No decir montos de multas: la resolución no los indica.
 - «Al tiro» va porque el video es para Chile; si se publica para otro país, cambiar por «de inmediato».
+
+---
+
+# Segundo video · fase 2: «tu guía ya salió, ¿estaba bien?» (45 segundos)
+
+**0-3 s · Gancho**
+«¿Tu programa de facturación ya agregó los datos que pide el SII? Compruébalo en diez segundos.»
+
+**3-12 s · El problema**
+«Desde mayo de 2027 todas las guías y facturas que acompañan un traslado tienen que llevar chofer, patente y destino. Si tu sistema no los manda, te enteras cuando te fiscalizan.»
+
+**12-35 s · Demostración (pantalla)**
+«Descargas el XML de una guía que ya emitiste y lo arrastras aquí.»
+(Pantalla: paso 6, «Revisar XML», dos documentos leídos.)
+«Esta guía cumple. Esta factura no: le falta el chofer y la patente, y además una línea no cuadra: cantidad por precio no da el monto.»
+(Pantalla: la factura con 4 errores.)
+«Y a fin de mes te arma el informe: cuántos despachos hubo y cuáles siguen con datos por completar.»
+(Pantalla: paso 7, informe del mes.)
+
+**35-45 s · Cierre**
+«El XML se lee en tu computador; no se sube a ningún lado. Comenta HERRAMIENTA y te mando el enlace.»

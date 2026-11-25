@@ -112,3 +112,5 @@ pre.hoja{white-space:pre-wrap;background:#f4f6f2;border:1px solid var(--borde);b
 .hito.pasado .cuenta b{color:var(--suave)}
 td.etq code{white-space:nowrap}
 @media print{.caja:last-of-type,.noimp{display:none!important}pre.hoja{max-height:none;border:0;background:none}}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media print{#v-informe .kpis{grid-template-columns:repeat(4,1fr)}}

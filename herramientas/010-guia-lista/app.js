@@ -2,13 +2,14 @@
 (function () {
   'use strict';
   var G = window.GuiaLista, CLAVE = 'guia-lista-v1';
-  var VISTAS = [['caso', 'Tu caso'], ['libreta', 'Libreta'], ['despachos', 'Despachos'], ['revision', 'Revisión'], ['pendientes', 'Pendientes'], ['fechas', 'Fechas clave']];
+  var VISTAS = [['caso', 'Tu caso'], ['libreta', 'Libreta'], ['despachos', 'Despachos'], ['revision', 'Revisión'], ['pendientes', 'Pendientes'], ['xml', 'Revisar XML'], ['informe', 'Informe del mes'], ['fechas', 'Fechas clave']];
   var SIT = { borrador: ['Con errores', 'e'], pendiente: ['Datos por completar', 'a'], lista: ['Lista para emitir', 'k'], completada: ['Completada', 'k'] };
   var est, vista = 'caso', sel = null;
   var $ = function (s, r) { return (r || document).querySelector(s); };
   var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
 
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function citaTxt(c) { return /^Formato/.test(c) ? esc(c) : 'Res. 144, ' + esc(c); }
   function hoy() { var d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
   function cargar() {
     try { var o = JSON.parse(localStorage.getItem(CLAVE)); if (o && !G.validarEstado(o).length) return G.normalizar(o); } catch (e) { /* sin almacenamiento */ }
@@ -56,7 +57,7 @@
     }
     $('#estado').innerHTML = h;
   }
-  function pintar() { ({ caso: vCaso, libreta: vLibreta, despachos: vDespachos, revision: vRevision, pendientes: vPendientes, fechas: vFechas })[vista](); pintarEstado(); }
+  function pintar() { ({ caso: vCaso, libreta: vLibreta, despachos: vDespachos, revision: vRevision, pendientes: vPendientes, xml: vXML, informe: vInforme, fechas: vFechas })[vista](); pintarEstado(); }
 
   // ---------- 1. Tu caso ----------
   function radio(nombre, valor, texto, actual) { return '<label><input type="radio" name="' + nombre + '" value="' + valor + '"' + (actual === valor ? ' checked' : '') + '><span>' + texto + '</span></label>'; }
@@ -169,9 +170,14 @@
       var st = G.situacion(x), S = SIT[st];
       return '<div class="item ' + (st === 'borrador' ? 'error' : st === 'pendiente' ? 'aviso' : 'alta') + '"><div class="fila"><b>' + esc(titulo(x)) + '</b><span class="pill ' + S[1] + '">' + S[0] + '</span></div>' +
         '<div class="sub">' + esc([G.fechaCL(x.fchSalida) || G.txt(x.fchSalida), (G.traslado(x.tipo) || {}).n, [G.txt(x.cmnaOrigen), G.txt(x.cmnaDest)].filter(Boolean).join(' → ')].filter(Boolean).join(' · ')) + '</div>' +
-        '<div class="acc"><button class="b chico' + (x.id === sel ? ' prim' : '') + '" type="button" data-editar="' + esc(x.id) + '">' + (x.id === sel ? 'Editando' : 'Editar') + '</button><button class="b chico" type="button" data-revisar="' + esc(x.id) + '">Revisar</button><button class="b chico" type="button" data-duplicar="' + esc(x.id) + '">Duplicar</button><button class="b chico" type="button" data-eliminar="' + esc(x.id) + '">Eliminar</button></div></div>';
+        '<div class="acc"><button class="b chico' + (x.id === sel ? ' prim' : '') + '" type="button" data-editar="' + esc(x.id) + '">' + (x.id === sel ? 'Editando' : 'Editar') + '</button><button class="b chico" type="button" data-revisar="' + esc(x.id) + '">Revisar</button><button class="b chico" type="button" data-duplicar="' + esc(x.id) + '">Duplicar</button><button class="b chico" type="button" data-ruta="' + esc(x.id) + '">Guardar como ruta</button><button class="b chico" type="button" data-eliminar="' + esc(x.id) + '">Eliminar</button></div></div>';
     }).join(''); else h += '<p class="vacio">Todavía no hay despachos. Crea el primero o prueba con el ejemplo de abajo.</p>';
-    h += '<div class="acc"><button class="b prim" type="button" id="nuevo">Nuevo despacho</button></div><div id="editor"></div>';
+    h += '<div class="acc"><button class="b prim" type="button" id="nuevo">Nuevo despacho</button>' +
+      (est.rutas.length ? '<label class="sr" for="desde-ruta">Nuevo desde una ruta frecuente</label><select id="desde-ruta" class="corto"><option value="">Nuevo desde una ruta frecuente…</option>' + est.rutas.map(function (r) { return '<option value="' + esc(r.id) + '">' + esc(r.nombre) + '</option>'; }).join('') + '</select>' : '') + '</div><div id="editor"></div>';
+    h += '<details class="regla noimp"' + (est.rutas.length ? '' : '') + '><summary>Rutas frecuentes (' + est.rutas.length + ')</summary><p class="sub">Una ruta guarda lo que se repite en cada viaje: origen, destino, transportista, chofer, vehículo, tipo de traslado y los productos de siempre. Al usarla se crea un despacho con la fecha de hoy y las cantidades en blanco. Para crear una, pulsa «Guardar como ruta» en un despacho.</p>' +
+      (est.rutas.length ? est.rutas.map(function (r) { return '<div class="item"><div class="fila"><b>' + esc(r.nombre) + '</b><span class="sub">' + esc([[r.cmnaOrigen, r.cmnaDest].filter(Boolean).join(' → '), r.patente, r.usos ? 'usada ' + r.usos + (r.usos === 1 ? ' vez' : ' veces') : ''].filter(Boolean).join(' · ')) + '</span></div><div class="acc"><button class="b chico" type="button" data-usar-ruta="' + esc(r.id) + '">Usar hoy</button><button class="b chico" type="button" data-quitar-ruta="' + esc(r.id) + '">Quitar</button></div></div>'; }).join('') : '<p class="vacio">Aún no guardas rutas.</p>') + '</details>';
+    h += '<details class="regla noimp" id="lote-det"><summary>Cargar varios despachos desde una planilla</summary><p class="sub">Un CSV (separado por punto y coma o coma) con <b>una fila por producto</b>. Las filas con el mismo «nombre» forman un solo despacho. Fechas en DD-MM-AAAA; los datos que no sabes, como «Diferido». Se aceptan también los encabezados del formato DTE (<code>CmnaDest</code>, <code>RUTChofer</code>, <code>NmbItem</code>…).</p>' +
+      '<div class="acc"><label class="b archivo">Cargar planilla de despachos (CSV)<input type="file" id="imp-lote" accept=".csv,text/csv"></label><button class="b" type="button" id="plantilla-lote">Descargar plantilla de despachos</button></div><div id="lote-res" aria-live="polite"></div></details>';
     s.innerHTML = h;
     if (d) editor(d);
   }
@@ -226,7 +232,7 @@
     var serios = r.alertas.filter(function (a) { return a.nivel !== 'info'; });
     $('#mini').innerHTML = (r.listo ? '<div class="ok">' + (r.diferidos.length ? 'Se puede emitir, con ' + r.diferidos.length + (r.diferidos.length === 1 ? ' dato diferido' : ' datos diferidos') + ' que después hay que completar.' : 'Sin errores: los datos de transporte están completos.') + (r.avisos ? ' Hay ' + r.avisos + (r.avisos === 1 ? ' aviso' : ' avisos') + ' para revisar.' : '') + '</div>' :
       '<div class="err">' + r.errores + (r.errores === 1 ? ' error' : ' errores') + ' antes de emitir' + (r.avisos ? ' y ' + r.avisos + (r.avisos === 1 ? ' aviso' : ' avisos') : '') + '.</div>') +
-      (serios.length ? '<details class="regla"' + (serios.length <= 4 ? ' open' : '') + '><summary>Ver qué falta (' + serios.length + ')</summary>' + serios.map(function (a) { return '<div class="item ' + a.nivel + '">' + esc(a.texto) + ' <span class="cita">Res. 144, ' + esc(a.cita) + '</span></div>'; }).join('') + '</details>' : '');
+      (serios.length ? '<details class="regla"' + (serios.length <= 4 ? ' open' : '') + '><summary>Ver qué falta (' + serios.length + ')</summary>' + serios.map(function (a) { return '<div class="item ' + a.nivel + '">' + esc(a.texto) + ' <span class="cita">' + citaTxt(a.cita) + '</span></div>'; }).join('') + '</details>' : '');
   }
   var V = $('#v-despachos');
   V.addEventListener('input', function (e) {
@@ -237,8 +243,16 @@
     else return;
     guardar(); marcar(d); pintarEstado();
   });
+  function usarRuta(rid) {
+    var r = est.rutas.filter(function (x) { return x.id === rid; })[0]; if (!r) return;
+    var d = G.despachoDesdeRuta(r, hoy()); r.usos = (r.usos || 0) + 1; est.despachos.push(d); sel = d.id; cambio(); vDespachos();
+    aviso('Despacho creado desde la ruta «' + r.nombre + '». Completa las cantidades y revisa chofer y patente.'); foco('#i-c-0');
+  }
   V.addEventListener('change', function (e) {
-    var t = e.target, d = despacho(); if (!d) return;
+    var t = e.target;
+    if (t.id === 'desde-ruta') { if (t.value) usarRuta(t.value); return; }
+    if (t.id === 'imp-lote') { if (t.files[0]) cargarLote(t.files[0]); return; }
+    var d = despacho(); if (!d) return;
     if (t.type === 'checkbox' && t.dataset.k) { d[t.dataset.k] = t.checked; guardar(); marcar(d); pintarEstado(); return; }
     if (t.dataset.pone && t.value) {
       var mapa = { origen: 'direcciones', dest: 'direcciones', trans: 'transportistas', chofer: 'choferes', veh: 'vehiculos' }, x = est[mapa[t.dataset.pone]].filter(function (y) { return y.id === t.value; })[0];
@@ -258,6 +272,10 @@
     var d = despacho(), x;
     if (b.id === 'nuevo') { x = G.despachoVacio(hoy()); if (est.direcciones.length === 1) { x.dirOrigen = est.direcciones[0].direccion; x.cmnaOrigen = est.direcciones[0].comuna; } est.despachos.push(x); sel = x.id; cambio(); vDespachos(); foco('#d-nombre'); return; }
     if (b.dataset.editar) { sel = b.dataset.editar; vDespachos(); foco('#d-nombre'); return; }
+    if (b.dataset.ruta) { x = est.despachos.filter(function (y) { return y.id === b.dataset.ruta; })[0]; var nom = prompt('Nombre de la ruta (por ejemplo «Bodega → Rancagua, camión 3/4»):', titulo(x)); if (nom === null) return; est.rutas.push(G.rutaDesde(x, nom)); cambio(); vDespachos(); aviso('Ruta guardada. Úsala con «Nuevo desde una ruta frecuente».'); return; }
+    if (b.dataset.usarRuta) { usarRuta(b.dataset.usarRuta); return; }
+    if (b.dataset.quitarRuta) { est.rutas = est.rutas.filter(function (r) { return r.id !== b.dataset.quitarRuta; }); cambio(); vDespachos(); aviso('Ruta quitada. Los despachos ya creados no cambian.'); return; }
+    if (b.id === 'plantilla-lote') { descargar('plantilla-despachos-guia-lista.csv', G.plantillaDespachosCSV(), 'text/csv;charset=utf-8'); return; }
     if (b.dataset.revisar) { sel = b.dataset.revisar; ir('revision'); window.scrollTo(0, 0); return; }
     if (b.dataset.duplicar) { x = est.despachos.filter(function (y) { return y.id === b.dataset.duplicar; })[0]; var c = JSON.parse(JSON.stringify(x)); c.id = G.id(); c.nombre = (G.txt(c.nombre) || 'Despacho') + ' (copia)'; c.fchEmis = c.fchSalida = hoy(); c.fchLlegada = ''; c.completado = null; est.despachos.push(c); sel = c.id; cambio(); vDespachos(); aviso('Despacho duplicado con fecha de hoy. Revisa chofer y patente.'); foco('#d-nombre'); return; }
     if (b.dataset.eliminar) { x = est.despachos.filter(function (y) { return y.id === b.dataset.eliminar; })[0]; if (!confirm('¿Eliminar «' + titulo(x) + '»? No se puede deshacer.')) return; est.despachos = est.despachos.filter(function (y) { return y.id !== b.dataset.eliminar; }); if (sel === b.dataset.eliminar) sel = null; cambio(); vDespachos(); return; }
@@ -266,6 +284,19 @@
     if (b.id === 'mas-item') { d.items.push(G.itemVacio()); cambio(); editor(d); foco('#i-n-' + (d.items.length - 1)); return; }
     if (b.dataset.quitarItem !== undefined) { d.items.splice(Number(b.dataset.quitarItem), 1); if (!d.items.length) d.items.push(G.itemVacio()); cambio(); editor(d); foco('#mas-item'); }
   });
+  function cargarLote(f) {
+    var r = new FileReader();
+    r.onload = function () {
+      var o = G.leerDespachosCSV(r.result, hoy());
+      if (o.errores.length) { $('#lote-res').innerHTML = '<div class="err">' + esc(o.errores.join('\n')) + '</div>'; return; }
+      est.despachos = est.despachos.concat(o.despachos); cambio();
+      var c = { borrador: 0, pendiente: 0, lista: 0 }; o.despachos.forEach(function (d) { var st = G.situacion(d); if (c[st] !== undefined) c[st]++; });
+      vDespachos(); $('#lote-det').open = true;
+      $('#lote-res').innerHTML = '<div class="ok">Se cargaron ' + o.despachos.length + (o.despachos.length === 1 ? ' despacho' : ' despachos') + ' desde ' + o.filas + (o.filas === 1 ? ' fila' : ' filas') + ': ' + c.lista + ' listos, ' + c.pendiente + ' con datos diferidos y ' + c.borrador + ' con errores.</div>' + (o.avisos.length ? '<div class="err">' + esc('Revisa:\n' + o.avisos.join('\n')) + '</div>' : '');
+    };
+    r.onerror = function () { aviso('No se pudo leer el archivo.', true); };
+    r.readAsText(f);
+  }
   function foco(s) { var n = $(s); if (n) { n.focus(); if (n.scrollIntoView) n.scrollIntoView({ block: 'center' }); } }
 
   // ---------- 4. Revisión ----------
@@ -278,7 +309,7 @@
     var h = '<h2>4. Revisión antes de emitir</h2>' +
       '<div class="noimp"><label for="rv-sel">Despacho</label><select id="rv-sel">' + est.despachos.map(function (x) { return '<option value="' + esc(x.id) + '"' + (x.id === d.id ? ' selected' : '') + '>' + esc(titulo(x)) + '</option>'; }).join('') + '</select></div>' +
       '<h3>' + esc(titulo(d)) + ' <span class="pill ' + SIT[st][1] + '">' + SIT[st][0] + '</span></h3>' +
-      r.alertas.slice().sort(function (a, b) { return orden[a.nivel] - orden[b.nivel]; }).map(function (a) { return '<div class="item ' + a.nivel + '"><span class="tag t-' + a.nivel + '">' + nombres[a.nivel] + '</span>' + esc(a.texto) + ' <span class="cita">Res. 144, ' + esc(a.cita) + '</span></div>'; }).join('') +
+      r.alertas.slice().sort(function (a, b) { return orden[a.nivel] - orden[b.nivel]; }).map(function (a) { return '<div class="item ' + a.nivel + '"><span class="tag t-' + a.nivel + '">' + nombres[a.nivel] + '</span>' + esc(a.texto) + ' <span class="cita">' + citaTxt(a.cita) + '</span></div>'; }).join('') +
       '<div class="acc noimp"><button class="b" type="button" data-editar="' + esc(d.id) + '">Corregir en el paso 3</button></div>' +
       '<h3>Hoja de datos para tu sistema de facturación</h3><p class="sub">Cada dato con la etiqueta del formato de documentos electrónicos (DTE) que cita el anexo de la resolución. Cópialos en el sistema gratuito del SII o en tu software, o pásale la hoja a quien emite.</p>' +
       '<div class="tabla"><table><thead><tr><th>Campo</th><th>Etiqueta DTE</th><th>Valor</th></tr></thead><tbody>' + F.map(function (c) { return '<tr><td>' + esc(c.nombre) + '</td><td class="etq"><code>' + esc(c.tag) + '</code></td><td style="white-space:normal">' + (c.valor ? esc(c.valor) : '<span class="sub">—</span>') + '</td></tr>'; }).join('') + '</tbody></table></div>' +
@@ -326,13 +357,92 @@
     if (b.dataset.reabrir) { est.despachos.filter(function (x) { return x.id === b.dataset.reabrir; })[0].completado = null; cambio(); vPendientes(); }
   });
 
-  // ---------- 6. Fechas clave ----------
+  // ---------- 6. Revisar XML ----------
+  var ultimoXML = null;
+  function vXML() {
+    var h = '<h2>6. Revisar una guía o factura ya emitida</h2><p class="sub">Sube el XML del documento tributario electrónico (lo descargas desde tu sistema de facturación o desde el SII). Guía Lista lo lee <b>en tu navegador</b> y lo revisa con las mismas reglas de la Resolución 144. Sirve para auditar lo que ya salió y para comprobar que tu software agregó los campos nuevos.</p>' +
+      '<div class="acc"><label class="b prim archivo">Elegir XML (uno o varios)<input type="file" id="imp-xml" accept=".xml,text/xml,application/xml" multiple></label><button class="b" type="button" id="xml-ejemplo">Probar con un XML de ejemplo</button></div>' +
+      '<p class="sub">Acepta un DTE suelto o un sobre de envío con varios documentos. La firma electrónica no se valida: se leen los datos.</p><div id="xml-res" aria-live="polite"></div>';
+    $('#v-xml').innerHTML = h;
+    if (ultimoXML) pintarXML(ultimoXML);
+  }
+  function pintarXML(R) {
+    var docs = [], errs = [];
+    R.forEach(function (x) { if (x.res.errores.length) errs.push(x.archivo + ': ' + x.res.errores.join(' ')); x.res.documentos.forEach(function (d) { d.archivo = x.archivo; docs.push(d); }); });
+    var orden = { error: 0, aviso: 1, info: 2 }, nombres = { error: 'Error', aviso: 'Aviso', info: 'Ten presente' };
+    var ok = docs.filter(function (d) { return d.cumple; }).length;
+    var h = (errs.length ? '<div class="err">' + esc(errs.join('\n')) + '</div>' : '') +
+      (docs.length ? '<div class="kpis"><div class="kpi"><b>' + docs.length + '</b><span>documentos leídos</span></div><div class="kpi"><b>' + ok + '</b><span>sin errores</span></div><div class="kpi"><b>' + (docs.length - ok) + '</b><span>con errores</span></div><div class="kpi"><b>' + docs.filter(function (d) { return d.diferidos.length; }).length + '</b><span>con datos diferidos</span></div></div>' : '');
+    docs.forEach(function (d) {
+      var al = d.alertas.slice().sort(function (a, b) { return orden[a.nivel] - orden[b.nivel]; });
+      h += '<div class="item ' + (d.cumple ? 'alta' : 'error') + '"><div class="fila"><b>' + esc(d.tipoNombre + ' N° ' + (d.folio || 's/f')) + '</b><span class="pill ' + (d.cumple ? 'k">Cumple' : 'e">' + d.errores + (d.errores === 1 ? ' error' : ' errores')) + '</span></div>' +
+        '<div class="sub">' + esc([G.fechaCL(d.fchEmis) || d.fchEmis, d.emisor.nombre, d.receptor.nombre ? '→ ' + d.receptor.nombre : '', d.archivo].filter(Boolean).join(' · ')) + '</div>' +
+        (al.length ? '<details class="regla"' + (docs.length <= 3 ? ' open' : '') + '><summary>Ver la revisión (' + al.length + ')</summary>' +
+        al.map(function (a) { return '<div class="item ' + a.nivel + '"><span class="tag t-' + a.nivel + '">' + nombres[a.nivel] + '</span>' + esc(a.texto) + ' <span class="cita">' + citaTxt(a.cita) + '</span></div>'; }).join('') + '</details>' : '<p class="sub">Sin observaciones: trae origen, destino, chofer, transportista, patente, fecha de salida y el detalle de la carga.</p>') + '</div>';
+    });
+    if (docs.length) h += '<div class="acc noimp"><button class="b prim" type="button" id="xml-agregar">Agregar a mis despachos</button><span class="sub">Así quedan en Pendientes (si traen datos diferidos) y en el informe del mes. No se duplican: se reconoce el folio.</span></div>';
+    $('#xml-res').innerHTML = h;
+  }
+  function leerArchivosXML(files) {
+    var R = [], n = files.length;
+    if (!n) return;
+    Array.prototype.forEach.call(files, function (f, i) {
+      var r = new FileReader();
+      function fin() { if (--n === 0) { ultimoXML = R; pintarXML(R); } }
+      r.onload = function () { R[i] = { archivo: f.name, res: G.leerXMLDTE(G.decodificar(new Uint8Array(r.result)), hoy()) }; fin(); };
+      r.onerror = function () { R[i] = { archivo: f.name, res: { documentos: [], errores: ['No se pudo leer el archivo.'] } }; fin(); };
+      if (f.size > 15 * 1024 * 1024) { R[i] = { archivo: f.name, res: { documentos: [], errores: ['El archivo pesa más de 15 MB.'] } }; fin(); return; }
+      r.readAsArrayBuffer(f);
+    });
+  }
+  $('#v-xml').addEventListener('change', function (e) { if (e.target.id === 'imp-xml') { leerArchivosXML(e.target.files); e.target.value = ''; } });
+  $('#v-xml').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    if (b.id === 'xml-ejemplo') { ultimoXML = [{ archivo: 'ejemplo-guia.xml', res: G.leerXMLDTE(G.xmlEjemplo(hoy()), hoy()) }]; pintarXML(ultimoXML); aviso('XML de ejemplo leído: una guía y una factura ficticias; la factura trae errores a propósito.'); }
+    if (b.id === 'xml-agregar' && ultimoXML) {
+      var docs = []; ultimoXML.forEach(function (x) { docs = docs.concat(x.res.documentos); });
+      var r = G.agregarDesdeXML(est, docs); cambio();
+      aviso('Se agregaron ' + r.agregados + (r.agregados === 1 ? ' despacho' : ' despachos') + (r.repetidos ? ' (' + r.repetidos + ' ya estaban cargados)' : '') + '.');
+    }
+  });
+
+  // ---------- 7. Informe del mes ----------
+  var mesSel = null;
+  var VIAS_INF = { 'guia-posterior': 'Guía posterior', gdt: 'Guía tercerizada', interoperabilidad: 'Envío electrónico' };
+  function tablita(titulo, filas, col) {
+    if (!filas.length) return '';
+    return '<h3>' + titulo + '</h3><div class="tabla"><table><thead><tr><th>' + col + '</th><th class="num">Despachos</th></tr></thead><tbody>' + filas.slice(0, 10).map(function (f) { return '<tr><td>' + esc(f.nombre) + '</td><td class="num">' + f.cantidad + '</td></tr>'; }).join('') + '</tbody></table></div>';
+  }
+  function vInforme() {
+    var M = G.mesesCon(est.despachos), s = $('#v-informe');
+    if (!M.length) { s.innerHTML = '<h2>7. Informe del mes</h2><p class="vacio">Todavía no hay despachos con fecha de emisión. Arma alguno, carga una planilla o un XML, o prueba con el ejemplo de abajo.</p>'; return; }
+    if (M.indexOf(mesSel) < 0) mesSel = M[0];
+    var I = G.informe(est.despachos, mesSel, hoy()), S = I.situacion;
+    var h = '<h2>7. Informe del mes</h2><p class="sub">Un resumen para la reunión con tu contador o con quien despacha: cuántos traslados hubo, cuáles siguen con datos por completar y qué errores se repiten.</p>' +
+      '<div class="navmes noimp"><label for="inf-mes">Mes</label><select id="inf-mes" class="corto">' + M.map(function (m) { return '<option value="' + m + '"' + (m === mesSel ? ' selected' : '') + '>' + esc(G.nombreMes(m)) + '</option>'; }).join('') + '</select><button class="b" type="button" id="inf-imp">Imprimir o guardar PDF</button><button class="b" type="button" id="inf-csv">Exportar los despachos del mes (CSV)</button></div>' +
+      '<h3 class="soloimp">Guía Lista · informe de ' + esc(I.titulo) + (est.emisor.nombre ? ' · ' + esc(est.emisor.nombre) : '') + '</h3>' +
+      '<div class="kpis"><div class="kpi"><b>' + I.total + '</b><span>despachos en ' + esc(I.titulo) + '</span></div><div class="kpi"><b>' + (S.lista + S.completada) + '</b><span>listos o completados</span></div><div class="kpi"><b>' + S.pendiente + '</b><span>con datos por completar</span></div><div class="kpi"><b>' + S.borrador + '</b><span>con errores</span></div></div>' +
+      '<div class="kpis"><div class="kpi"><b>' + I.lineas + '</b><span>líneas de producto</span></div><div class="kpi"><b>' + I.pesoKg.toLocaleString('es-CL') + '</b><span>kg declarados</span></div><div class="kpi"><b>' + I.conDiferidos + '</b><span>salieron con datos diferidos</span></div><div class="kpi"><b>' + (I.diasCompletar === null ? '—' : I.diasCompletar.toLocaleString('es-CL')) + '</b><span>días promedio en completarlos</span></div></div>';
+    if (I.abiertos.length) h += '<h3>Siguen abiertos (' + I.abiertos.length + ')</h3>' + I.abiertos.map(function (a) { return '<div class="item aviso"><div class="fila"><b>' + esc(a.nombre) + (a.folio ? ' · folio ' + esc(a.folio) : '') + '</b><span>' + (a.dias === null ? '' : a.dias < 0 ? 'fecha futura' : a.dias === 0 ? 'emitido hoy' : 'hace ' + a.dias + (a.dias === 1 ? ' día' : ' días')) + '</span></div><div class="sub">Falta: ' + esc(a.faltan.join(', ')) + '</div></div>'; }).join('');
+    if (I.errores.length) h += '<h3>Errores que más se repiten</h3><div class="tabla"><table><thead><tr><th>Error</th><th>Resolutivo</th><th class="num">Veces</th></tr></thead><tbody>' + I.errores.slice(0, 8).map(function (e) { return '<tr><td style="white-space:normal">' + esc(e.texto) + '</td><td>' + esc(e.cita) + '</td><td class="num">' + e.cantidad + '</td></tr>'; }).join('') + '</tbody></table></div>';
+    h += tablita('Por tipo de traslado', I.porTipo, 'Tipo') + tablita('Rutas', I.rutas, 'Origen → destino') + tablita('Choferes', I.choferes, 'Chofer') + tablita('Vehículos', I.vehiculos, 'Patente') + tablita('Transportistas', I.transportistas, 'RUT') +
+      tablita('Cómo se completaron los datos diferidos', I.completadas.map(function (c) { return { nombre: VIAS_INF[c.nombre] || c.nombre, cantidad: c.cantidad }; }), 'Vía');
+    h += '<p class="sub">Informe preparado con Guía Lista el ' + esc(G.fechaCL(hoy())) + '. Revisión según la Resolución Ex. SII N° 144 de 2026; no reemplaza la opinión de tu contador.</p>';
+    s.innerHTML = h;
+  }
+  $('#v-informe').addEventListener('change', function (e) { if (e.target.id === 'inf-mes') { mesSel = e.target.value; vInforme(); } });
+  $('#v-informe').addEventListener('click', function (e) {
+    if (e.target.id === 'inf-imp') window.print();
+    if (e.target.id === 'inf-csv') descargar('despachos-' + mesSel + '.csv', G.despachosCSV(est.despachos.filter(function (d) { return G.esFecha(d.fchEmis) && d.fchEmis.slice(0, 7) === mesSel; })), 'text/csv;charset=utf-8');
+  });
+
+  // ---------- 8. Fechas clave ----------
   function vFechas() {
     var H = G.hitos(hoy());
-    $('#v-fechas').innerHTML = '<h2>6. Fechas clave</h2><p class="sub">Tomadas del texto de la resolución y de la aclaración que publicó el SII el 29 de octubre de 2026.</p>' +
+    $('#v-fechas').innerHTML = '<h2>8. Fechas clave</h2><p class="sub">Tomadas del texto de la resolución y de la aclaración que publicó el SII el 29 de octubre de 2026.</p>' +
       H.map(function (h) { return '<div class="hito' + (h.vencido ? ' pasado' : '') + '"><div class="cuenta"><b>' + (h.vencido ? '✓' : h.faltan) + '</b>' + (h.vencido ? 'ya rige' : h.faltan === 1 ? 'día' : 'días') + '</div><div><b>' + esc(G.fechaCL(h.fecha)) + ' · ' + esc(h.titulo) + '</b><div class="sub">' + esc(h.detalle) + '</div></div></div>'; }).join('') +
       '<p class="nota"><b>Ojo con la fecha de inicio.</b> El texto de la resolución dice que rige desde el 1 de noviembre de 2026 y da plazo hasta el 1 de mayo de 2027 solo para la guía tercerizada y la interoperabilidad. La noticia del SII del 29 de octubre presenta el 1 de mayo de 2027 como la fecha en que todos deben incluir los campos. Si ya tienes los datos, lo prudente es emitir con ellos desde ahora; ante la duda, pregunta a tu contador o al SII.</p>' +
-      '<div class="acc"><button class="b prim" type="button" id="ics">Agregar los plazos a mi calendario (.ics)</button><a class="b" href="' + G.FUENTE + '" target="_blank" rel="noopener">Leer la resolución (PDF)</a><a class="b" href="' + G.NOTICIA + '" target="_blank" rel="noopener">Leer la aclaración del SII</a></div>' +
+      '<div class="acc"><button class="b prim" type="button" id="ics">Agregar los plazos a mi calendario (.ics)</button><a class="b" href="' + G.FUENTE + '" target="_blank" rel="noopener">Leer la resolución (PDF)</a><a class="b" href="' + G.NOTICIA + '" target="_blank" rel="noopener">Leer la aclaración del SII</a><a class="b" href="' + G.NOTICIA2 + '" target="_blank" rel="noopener">Noticia del SII del 24-11-2026</a></div>' +
       '<h3>Qué sanciona la resolución</h3><ul><li>No emitir o no enviar al SII la guía o la factura: artículo 97 N° 10 del Código Tributario.</li><li>Trasladar bienes en un vehículo de carga sin guía o factura emitida en forma: artículo 97 N° 17.</li><li>Emitir sin cumplir los requisitos de esta resolución: artículo 109.</li></ul><p class="sub">Resolutivo 17°. La resolución no indica montos; dependen del Código Tributario.</p>';
   }
   $('#v-fechas').addEventListener('click', function (e) { if (e.target.id === 'ics') descargar('plazos-guia-despacho-sii.ics', G.ics(), 'text/calendar;charset=utf-8'); });

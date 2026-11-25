@@ -137,16 +137,25 @@
    "fecha": "2026-11-23",
    "nombre": "Guía Lista",
    "slug": "010-guia-lista",
-   "gancho": "Revisa tu guía de despacho antes de que salga el camión: chofer, patente, origen y destino como los pide ahora el SII, con el resolutivo que respalda cada aviso.",
+   "gancho": "Revisa tu guía de despacho antes de que salga el camión, y el XML de las que ya salieron: chofer, patente, origen y destino como los pide ahora el SII, con el resolutivo que respalda cada aviso.",
    "categoria": "Despachos y logística",
    "tipo": "nueva",
-   "fases": "1/2",
+   "fases": "2/2",
    "demo_url": "https://freyesperales.github.io/laboratorio-pymes/herramientas/010-guia-lista/",
    "repo_url": "https://github.com/freyesperales/laboratorio-pymes/tree/main/herramientas/010-guia-lista",
-   "estado": "en-fases",
-   "enlaces_investigacion": 35,
-   "minutos": 15,
-   "nota": "4 exploradores en paralelo; el orquestador releyó completa la Resolución Ex. SII N° 144 (texto y anexo de campos, extraído del PDF), la aclaración del SII del 29-10-2026 y el art. 20 de la Ley 7/1996 en el BOE. 54 pruebas pasan. El servidor de vista previa no se pudo iniciar en la corrida desatendida: la interfaz se probó con Edge sin ventana sobre una copia local (19 comprobaciones del flujo completo, 0 errores de JavaScript, capturas a 500 y 1200 px). Compuerta de profundidad: pasa."
+   "estado": "publicada",
+   "enlaces_investigacion": 49,
+   "minutos": 25,
+   "nota": "4 exploradores en paralelo; el orquestador releyó completa la Resolución Ex. SII N° 144 (texto y anexo de campos, extraído del PDF), la aclaración del SII del 29-10-2026 y el art. 20 de la Ley 7/1996 en el BOE. 54 pruebas pasan. El servidor de vista previa no se pudo iniciar en la corrida desatendida: la interfaz se probó con Edge sin ventana sobre una copia local (19 comprobaciones del flujo completo, 0 errores de JavaScript, capturas a 500 y 1200 px). Compuerta de profundidad: pasa.",
+   "actualizada": "2026-11-25",
+   "fase2": {
+    "fecha": "2026-11-25",
+    "enlaces_investigacion": 14,
+    "minutos": 10,
+    "pruebas": 78,
+    "nota": "Continuación con 2 exploradores en paralelo. El orquestador comprobó en el XSD vigente del SII (DTE_v10.xsd, 06-02-2026) la ubicación de las etiquetas de transporte y que IndTraslado llega al 9, y el título de los RDL 42/2026 y 43/2026 en el BOE. 78 pruebas pasan. El panel de vista previa no se pudo abrir en la corrida desatendida: la interfaz se probó con Playwright sobre un servidor local (flujo completo de lote, rutas, XML en ISO-8859-1, informe y teclado; 0 errores de JavaScript; capturas a 400 y 1200 px).",
+    "compuerta": "pasa: 14 enlaces consultados hoy (mínimo 4 en continuación), pruebas y demo revisadas"
+   }
   }
  ]
 }
