@@ -1,0 +1,19 @@
+{
+  "n": 11,
+  "slug": "011-plazo-abierto",
+  "nombre": "Plazo Abierto",
+  "fases_total": 2,
+  "fase_actual": 1,
+  "plan": [
+    {"fase": 1, "objetivo": "Tienda (Chile o España), ventas (a mano, CSV o ejemplo), plazo de retracto o desistimiento y garantía por pedido con su artículo, avisos de plazo alargado (90 días / 12 meses), dinero todavía devolvible con calendario de liberación, plazo de reembolso cuando el cliente se retracta, y política de devoluciones con formulario de desistimiento. Respaldo JSON y CSV, sin conexión.", "hecho": false},
+    {"fase": 2, "objetivo": "Solicitudes de devolución y garantía como casos con plazos (reembolso, devolución del bien, retención hasta recibirlo), mensajes al cliente, importadores de pedidos de Shopify y WooCommerce, kit del botón «desistir del contrato aquí» del art. 106 bis (España, desde el 25-01-2027) con acuse de recibo, calendario .ics e informe mensual imprimible.", "hecho": false}
+  ],
+  "siguiente_paso": "Fase 2: empezar por el tablero de solicitudes (logica.casos) reutilizando reembolsoLimite y calcularPedido; luego los importadores con encabezados reales de exportación de Shopify y WooCommerce (verificarlos en su documentación) y el kit del art. 106 bis.",
+  "decisiones": [
+    "Criterio prudente de plazos: el día de la recepción no se cuenta; en España, si el último día cae en fin de semana se muestra una fecha prudente el lunes siguiente (Reglamento 1182/71 art. 3.4, sin verificar porque EUR-Lex no respondió).",
+    "Sin fecha de recepción el pedido se cuenta como expuesto con plazo sin iniciar.",
+    "Exclusiones chilenas del art. 3° bis b) marcadas con aviso: el reglamento que las detalla puede no estar dictado.",
+    "Categoría «Postventa y consumidor», distinta de la 010 (Despachos y logística)."
+  ],
+  "actualizado": "2026-11-27"
+}

@@ -1,5 +1,5 @@
 {
- "ultimo_numero": 10,
+ "ultimo_numero": 11,
  "herramientas": [
   {
    "n": 1,
@@ -156,6 +156,23 @@
     "nota": "Continuación con 2 exploradores en paralelo. El orquestador comprobó en el XSD vigente del SII (DTE_v10.xsd, 06-02-2026) la ubicación de las etiquetas de transporte y que IndTraslado llega al 9, y el título de los RDL 42/2026 y 43/2026 en el BOE. 78 pruebas pasan. El panel de vista previa no se pudo abrir en la corrida desatendida: la interfaz se probó con Playwright sobre un servidor local (flujo completo de lote, rutas, XML en ISO-8859-1, informe y teclado; 0 errores de JavaScript; capturas a 400 y 1200 px).",
     "compuerta": "pasa: 14 enlaces consultados hoy (mínimo 4 en continuación), pruebas y demo revisadas"
    }
+  },
+  {
+   "n": 11,
+   "fecha": "2026-11-27",
+   "nombre": "Plazo Abierto",
+   "slug": "011-plazo-abierto",
+   "gancho": "Sube tus ventas y te dice cuánto de lo que vendiste todavía te pueden devolver, hasta qué día, y si tu tienda alargó ese plazo a 90 días o a más de un año sin saberlo. Chile y España.",
+   "categoria": "Postventa y consumidor",
+   "tipo": "nueva",
+   "fases": "1/2",
+   "demo_url": "https://freyesperales.github.io/laboratorio-pymes/herramientas/011-plazo-abierto/",
+   "repo_url": "https://github.com/freyesperales/laboratorio-pymes/tree/main/herramientas/011-plazo-abierto",
+   "estado": "en-fases",
+   "enlaces_investigacion": 15,
+   "minutos": 17,
+   "nota": "4 exploradores en paralelo; el orquestador leyó en su fuente oficial los arts. 3° bis, 12 A y 21 de la Ley 19.496 (texto refundido, LeyChile), los arts. 48 y 50 del Código Civil, los arts. 69, 71, 76, 102 a 108 y 120 y el anexo B del TRLGDCU (BOE) y el RDL 44/2026 (art. 106 bis, vigente desde el 25-01-2027). EUR-Lex no respondió: la regla de fin de semana del Reglamento 1182/71 queda marcada sin verificar y solo alarga plazos. 44 pruebas pasan. Interfaz probada en el navegador del escritorio sobre un servidor local: ejemplo de Chile y de España, alta de venta, pegado de CSV con error por fila, 0 errores de consola, sin desborde a 375 px.",
+   "compuerta": "pasa: 15 enlaces consultados hoy, 3 propuestas con jurado, PROPUESTAS.md actualizado, pruebas y demo revisadas"
   }
  ]
 }
